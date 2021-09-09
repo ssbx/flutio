@@ -1,0 +1,37 @@
+
+.TH TRALALA 1
+
+.SH "NAME"
+tralala \- Lecteur de musique
+
+
+.SH "SYNOPSIS"
+.HP \w'\fBtralala\fR\ 'u
+\fBtralala\fR [-slave] [-master] [-connect]
+
+
+.SH "DESCRIPTION"
+.PP
+\fBtralala\fR
+s'execute par defaut en mode fenetre avec module audio, d'ou il prendra ses commandes de l'utilisateur.
+.LP
+Les options \fB-slave\fP et \fB-master\fP permettent d'utiliser une instance de l'application (le master) pour en controller une autre (le slave) en communiquant via des pipes. Ceci permet d'utiliser l'interface depuis un ordinateur et de controller une instance distante.
+.LP
+A elles seules, ces commandes ne permettent pas de controller une instance distante. Il necessite d'abord d'établir un tunnel (typiquement ssh) et de créer un script qui connecte le STDIN/STDOU du master au STDOUT/STDIN du slave.
+
+.TP 5
+\fB-slave\fP
+Execute tralala sans interface utilisateur mais avec le module audio. L'application ecoute sur STDIN les commandes et emmet sur STDOUT les evenements.
+
+.TP 5
+\fB-master\fP
+Execute tralala en mode graphique sans initializer le module audio. Il emmetra toutes ses commandes via STDOUT et recevra les réponses et evenements via STDIN.
+
+.SH "AUTHOR"
+Ecrit par Seb
+
+.SH "COPYRIGHT"
+Ma license
+
+.SH "SEE ALSO"
+Chercher comment configurer un tunnel ssh d'abord

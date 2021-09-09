@@ -1,0 +1,16 @@
+fadeEmulateK7.c
+fadeEmulateVinyl.c
+fadeReverb.c
+fadeVolume.c
+filterEqualizer.c
+filterSoftVolumeChange.c
+inputFlac.c
+inputMp3.c
+messagesJsonObject.c
+messagesTclDict.c
+outputAlsa.c
+outputAudioio.c
+outputIcecastStrem.c
+outputPipeTo.c
+transformChannelCount.c
+transformSamplerate.c

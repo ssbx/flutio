@@ -1,0 +1,54 @@
+maintenant:
+- gerer correctement les playlist et chargement à l'avance, refactorer
+avec playlist.c pour avoir un truc clean sans bugs.
+- gerer correctement les effets, refactorer avec efx_*.c pour avoir un
+truc clean comprehensible et sans bugs.
+- utiliser animcurve.c pour les animations des effets, pareil, pour y
+voir plus clair et avoir un truc clean.
+- collection (tags.c ok)
+
+fun:
+- effets/microfades player (reverbe inversée, ralentis, fondu)
+- collection
+
+apres plus tard:
+- sauvegarde de listes
+- configuration du player (effets/selection output)
+- visualiseur/equaliser (opengl?)
+
+un jour peut être:
+- veritable equaliseur?
+- roles?
+
+details importants?
+- configurer la partie "playing:xx by yy" pour afficher se que l'utilisateur
+veut.
+- mettre aussi "playing:xx by yy" sur l'osd
+- a la place de "9 tracks (1:47) etre plus explicite, playliste de x tracks
+d'une durée de xxHxxMxxS et un compteur qui progresse.
+- tous les modes random
+- tous les modes loop
+- bouton stop avec option: apres courante, apres album ou autre filtre
+- bouton play avec option: play at telle heure, play after tant de temps en
+secondes ou minutes, avec OSD qui s'active 5 seconds avant de partir pour
+annocer le démarage imminent, puis l'osd s'affiche pour annoncer normalement
+la piste courante.
+- sauvegarder/charger playliste
+
+# gestion de collection
+voir:
+- man fflush, man fsync pour atomicité, et man rename pour un genre de
+journalisation et atomicité genre:
+    write(fd);
+    fflush(fd);
+    fsync(fd);
+    rename(fd, "old", "new");
+Pour editer/gerer la collection il y aura:
+
+- les filtres utilisateurs
+- les fichiers .fluconf dans le système de fichier pour appliquer
+des tags à un ensemble de fichiers
+- un fichier .csv à éditer par l'utilisateur pour editer les tags
+ou pouvoir utiliser ce fichier pour importer dans un autre lecteur, ou
+"pousser" les informations du .csv dans les fichiers audio avec un script
+bash ou autre.

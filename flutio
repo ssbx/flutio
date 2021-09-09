@@ -1,0 +1,296 @@
+#!/bin/sh
+# Next line ignored by tcl \
+exec tclsh "$0" ${1+"$@"}
+
+namespace eval flutio {
+    variable usage \
+"Usage: [info script] COMMAND
+
+This command is used by flutio to start/connect a flutio processusing the
+configuration file located in \$HOME/.flutio/flutio.config.
+
+
+Where COMMAND can be:
+     start   Start the daemon and return
+     kill    Kill the daemon
+     status  Print the current player process status
+     connect Connect to the flutio player and read/write commands/messages
+             from/to stdin/stdout. This is the command used by the user
+             interface. This command will start the flutio process if it
+             is down.
+     help    Print this messag
+"
+    variable libdir
+    variable userdir
+    variable cfgfile
+    variable pidfile
+    variable logfile
+    variable sockfile
+    variable plugdirs
+    variable CFG
+}
+
+###########################################################################
+# Get this very script path not the symbolic lynk
+set flutio_script [info script]
+while {[file type $flutio_script] == "link"} {
+    set flutio_script [file link $flutio_script]
+}
+
+###########################################################################
+# Catch missing libs
+set ::flutio::libdir [file dirname $flutio_script]
+if [catch {
+        package require Tcl 8.6
+        load [file join $::flutio::libdir libtcltaglib.so]
+        load [file join $::flutio::libdir libtclunixsocket.so]
+        load [file join $::flutio::libdir libtclflutio.so] } msg] {
+    puts stderr "flutio won't start: $msg"
+    exit 1
+}
+
+###########################################################################
+# Check if command is valid
+if {$argc != 1 || [ lsearch \
+        {start kill status connect help daemon} [lindex $argv 0]] == -1} {
+    puts stderr $::flutio::usage
+    exit 1
+}
+
+###########################################################################
+# Ok then, set some script variables
+set ::flutio::libdir   [file dirname $flutio_script]
+set ::flutio::userdir  [file join $env(HOME) .flutio]
+set ::flutio::cfgfile  [file join $::flutio::userdir flutio.config]
+set ::flutio::pidfile  [file join $::flutio::userdir flutio.pid]
+set ::flutio::logfile  [file join $::flutio::userdir flutio.log]
+set ::flutio::sockfile [file join $::flutio::userdir flutio.socket]
+set ::flutio::plugdirs [list  [file join $::flutio::libdir  plugins] \
+                            [file join $::flutio::userdir plugins]]
+
+###########################################################################
+# Create user directory if absent
+if {! [file exist $::flutio::userdir]} {
+    file mkdir $::flutio::userdir
+    file attribute $::flutio::userdir -permissions 0700
+}
+
+###########################################################################
+# Create initial config it does not exist
+set default_config "
+PLUGINS_DIRS=$::flutio::plugdirs
+DAEMON_MAX_CONNS=1
+DAEMON_PERSIST=0
+COLLECTION_ROOT=$env(HOME)
+COLLECTION_FOLLOW_SYMLINKS=1"
+
+if {! [file exist $::flutio::cfgfile]} {
+    set f [open $::flutio::cfgfile "w"]
+    puts $f $default_config
+    close $f
+}
+
+###########################################################################
+# Load config
+array set ::flutio::CFG {}
+set f [open $::flutio::cfgfile "r"]
+foreach line [split [read $f] "\n" ] {
+    set line [string trim $line]
+    if { ! [string match "#*" $line] } {
+        set opt [split $line "="]
+        set key [lindex $opt 0]
+        set val [lindex $opt 1]
+        set ::flutio::CFG($key) $val
+    }
+}
+close $f
+
+###########################################################################
+# Here define all commands functions but the (stelth) "daemon" one.
+#
+namespace eval ::flutio {
+
+    #######################################################################
+    # flutio start
+    proc start {} {
+        return 0
+    }
+
+    #######################################################################
+    # flutio status
+    proc status {} {
+        if [file exist $::flutio::pidfile] {
+            set f [open $::flutio::pidfile "r"]
+            set fpid [read $f]
+            close $f
+            puts "Flutio $fpid running"
+        } else {
+            puts "Flutio down"
+        }
+        return 0
+    }
+
+    #######################################################################
+    # flutio help
+    proc help {ret} {
+        if { $ret == 0 } {
+            puts stdout $::flutio::usage
+        } else {
+            puts stderr $::flutio::usage
+        }
+        return $ret
+    }
+
+    #######################################################################
+    # flutio connect
+    proc connect {} {
+        if { ! [file exist $::flutio::pidfile] } {
+            set ret [exec [info script] start]
+            if {$ret > 0} {
+                puts "Flutio connect: error starting flutio"
+                return $ret
+            }
+        }
+
+        if { ! [file exist $::flutio::sockfile] } {
+            puts "Flutio connect: $::flutio::sockfile does not exists"
+            return 1
+        }
+
+        return 0
+    }
+
+    #######################################################################
+    # flutio kill
+    proc kill {} {
+        if [file exist $::flutio::pidfile] {
+            set f [open $::flutio::pidfile "r"]
+            set fpid [read $f]
+            close $f
+            set ret [exec kill $fpid]
+            if {$ret == 0} {
+                puts "Flutio process $fpid killed"
+            }
+            file delete $::flutio::pidfile
+            return $ret
+        } else {
+            puts "No flutio process running"
+            return 0
+        }
+    }
+}
+
+###########################################################################
+# Handle script command argument
+switch [lindex $argv 0] {
+    "daemon"  {}
+    "start"   {exit [::flutio::start]}
+    "kill"    {exit [::flutio::kill]}
+    "status"  {exit [::flutio::status]}
+    "connect" {exit [::flutio::connect]}
+    "help"    {exit [::flutio::help 0]}
+    default   {exit [::flutio::help 1]}
+}
+
+###########################################################################
+# !!! ONLY THE "flutio daemon" COMMAND GOES OVER THERE !!!!
+###########################################################################
+
+###########################################################################
+# The ::flutio::main function is called at the very end of the script, but
+# defined here for lisibility
+proc ::flutio::main {} {
+
+    #######################################################################
+    # Load all possible plugins
+    foreach plugdir $::flutio::plugdirs {
+        set pluglibs [glob -nocomplain -directory $plugdir "*.so"]
+        foreach plugin $pluglibs {
+            puts "will load $plugin"
+            ::flutio::c::plugins::load $plugin
+        }
+    }
+
+    ::flutio::c::outputs::open
+
+
+
+    set test_set [glob -nocomplain -directory /home/seb/test/ "*.wav"]
+    set ::flutio::playlist::tracks [lsort -dictionary $test_set]
+    puts stderr $test_set
+
+    ::flutio::playlist::play 0
+    vwait _cataclysm_
+}
+
+
+
+
+namespace eval ::flutio::usocket {
+    variable connexions
+
+    proc accept {con} {
+        puts "hello $con"
+    }
+
+}
+
+namespace eval ::flutio::playlist {
+    variable tracks [list]
+    variable current_track -1
+    variable next_track    -1
+
+    proc play {index} {
+        variable tracks
+        variable current_track
+        variable next_track
+
+        set numTracks [llength $tracks]
+
+        if {[llength $tracks] == 0} {
+            puts stderr "no tracks to play"
+            return
+        }
+
+        if {$index > $numTracks} {
+            puts stderr "no tracks at index $index"
+            return
+        }
+
+        if {$index < 0} {
+            set index 0
+        }
+
+        if {[catch {::flutio::c::player::play \
+                            [lindex $tracks $index]} err] == 0 } {
+            set current_track $index
+            #::flutio::playlist::setnext
+        } else {
+            puts stderr "Can not play [lindex $tracks $index]"
+        }
+    }
+
+    proc setnext {} {
+        variable tracks
+        variable current_track
+        variable next_track
+
+        set maybe_next [expr $current_track + 1]
+        if {$maybe_next > [llength $tracks]} {
+            return
+        }
+
+        if {[catch {::flutio::c::player::setnext \
+                        [lindex $tracks $maybe_next]} err] == 0} {
+            set next_track $maybe_next
+        } else {
+            puts stderr "Can not setnext [lindex $tracks $maybe_next]"
+            set next_track -1
+        }
+    }
+}
+
+namespace eval ::flutio::collection {
+}
+
+::flutio::main

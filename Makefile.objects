@@ -1,0 +1,14 @@
+inputs.o: inputs.c inputs.h include/flutio/plugins/input.h \
+ include/flutio/plugins/common.h
+outputs.o: outputs.c outputs.h include/flutio/plugins/output.h \
+ include/flutio/plugins/common.h player.h
+player.o: player.c player.h track.h inputs.h \
+ include/flutio/plugins/input.h include/flutio/plugins/common.h
+plugins.o: plugins.c inputs.h include/flutio/plugins/input.h \
+ include/flutio/plugins/common.h outputs.h \
+ include/flutio/plugins/output.h
+tclflutio.o: tclflutio.c plugins.h outputs.h \
+ include/flutio/plugins/output.h include/flutio/plugins/common.h player.h
+tclunixsocket.o: tclunixsocket.c
+track.o: track.c track.h inputs.h include/flutio/plugins/input.h \
+ include/flutio/plugins/common.h

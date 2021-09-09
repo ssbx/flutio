@@ -1,0 +1,4 @@
+inputLibsndfile.o: inputLibsndfile.c ../include/flutio/plugins/input.h \
+ ../include/flutio/plugins/common.h
+outputAlsa.o: outputAlsa.c ../include/flutio/plugins/output.h \
+ ../include/flutio/plugins/common.h
