@@ -28,3 +28,46 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef FLUTIO_POST_INPUT_PLUGIN_H
+#define FLUTIO_POST_INPUT_PLUGIN_H
+#include <flutio/plugins/common.h>
+
+#ifndef FLUTIO_MAIN_BUILD // only for plugin include
+    int PluginType() {
+        return FLUTIO_PLUGIN_TYPE_POST_INPUT;
+    }
+#endif // FLUTIO_MAIN_BUILD
+#include <flutio/plugins/input.h>
+
+/*
+ * To write a plugin for Flutio:
+ *  - include this file
+ *  - write a "input_info" function in your plugin
+ *  - put your plugin in either $(libdir)/flutio/plugins or
+ *  $HOME/.flutio/plugins
+ *
+ *  See the documentation of "input_info" at the end of this
+ *  file.
+ */
+
+/*
+ * PostInput plugin interface
+ */
+typedef struct _PostInputPlugin_Info_T {
+    char *name;
+    int	revision;
+    InputPlugin_Info_T* getFrameGeneratorInterface(PluginData_T);
+    int concerned(InputPlugin_Info_T*);
+    PluginData_T init(InputPlugin_Info_T*);
+} PostInputPlugin_Info_T;
+
+/*
+ * This is the unique function that must be implemented on the
+ * plugin side. Must return the type of plugin, and the relevant
+ * union (input or output) filled with relevant data.
+ * input_info_t is self explanatory, see default flutio plugins
+ * source for examples.
+ */
+void PostInputPlugin_Info(PostInputPlugin_Info_T *info);
+
+#endif // FLUTIO_POST_INPUT_PLUGIN_H

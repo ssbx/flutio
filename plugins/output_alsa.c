@@ -55,7 +55,7 @@ int  Alsa_Open(OutputParams_T*);
 void Alsa_Close();
 int  Alsa_GetRate();
 int  Alsa_GetChannels();
-void OutputPlugin_Info(OutputPlugin_Info_T *info)
+void Flutio_OutputPlugin_Info(OutputPlugin_Info_T *info)
 {
     info->name = PLUGIN_NAME;
     info->revision = PLUGIN_REVISION;

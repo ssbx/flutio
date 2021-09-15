@@ -1,6 +1,154 @@
+===============================================================================
+# COMMANDES
+Plutot qu'un fichier de configuration, un "startup script" a la cisco qui
+permet d'activer, configurer, ordonner ... les plugins.
+
+===============================================================================
+# MOTIVATION
+
+Faire un programme sur le long terme avec retour utilisateurs et developpement
+continu perein prenant en compte:
+- long term development pour un homme (FINANCEMENT) sans pression de resultat,
+- qualité/clarté/compartimentation du code pour que le code puisse être facilement
+maintenu/copié/utilisé
+- techno evaluées selon leur durabilité (tk plutot que qt) ect...
+- options pour empreinte ecologique faible (options pour faire plus "funky")
+- dispo uniquement sur os opensource
+
+
+===============================================================================
+# SOUSOUS
+
+Souscription, idéalement twitch prime, ça coute rien au souscripteur, ou sinon,
+truc custom ou le souscripteur à accès aux mises à jour et à une fonction spéciale
+qui utilise un vpn/serveur dédié, qui permet de partager ses fichiers audio
+anonymement.
+
+Idée, un revenu fixe, des que la somme des souscriptions dépasse le revenu, le
+reste est redistribué aux souscripteurs, ou versé au projet ou association amie,
+celon leur choix. Du coup, plus il y a de souscripteurs, moins chaque souscripteur
+paye. Example, 1000 euros fixes, 5 euros par sus, atteint avec 200 sus, à 400 subs,
+chaque sus recouvre 2.5 euros, donc sus à 2.5. Et en plus, non agressif. Rappel
+tous les 6 mois que l'utilisateur à souscrit, et lien pour renouveler. Non agressif
+car si l'utilisateur ne repond pas la souscription se termine (l'inverse du
+fonctionnement actuel des choses).
+
+Une adresse pour les donnations directe qui ne sont pas de la monnaie.
+
+Ce serait pas mal de créer un truc qui fasse sortir l'argent du système.
+
+Un bonnus pour les abonnés, genre VPN pour utilisation du réseau soulseek,
+ou réseau developpé pour les besoins sur thor, ou truc décentralisé et
+anonyme permetant l'échange de fichier anonymes (VPN?).
+
+
+===============================================================================
+# INSTALLATION
+
+                 Flutio Installation
+
+
+Flutio is built and installed with a dead simple Makefile.
+Open and edit it if none of the options described here
+fixes your problem.
+
+
+These commands could be enought for a debian based system:
+
+    $ sudo apt install build-essential \
+                       tcl8.6-dev \
+                       libsndfile1-dev \
+                       libsamplerate0-dev \
+                       libcairo2-dev
+    $ make
+    $ make install
+
+ At this point install target have created $HOME/{bin,lib,
+share} directories if they do not exists. The flutio
+binaries are located in $HOME/bin
+
+    $ flutiou
+
+
+        Dependencies
+        ============
+
+It is wrote in Tcl, with some extensions in C. The gui
+uses Tk, cairo and pango.
+
+I use these libraries on my computer for the development:
+
+    libsamplerate 0.1.9
+    libsndfile    1.0.28
+    tcltk         8.6.10
+    libcairo2     1.16.0
+
+
+
+        Build/install targets
+        =====================
+
+Flutio player daemon only:
+
+    $ make fpd
+    $ make install-fpd
+
+Flutio graphical user interface:
+
+    $ make gui
+    $ make install-gui
+
+Both:
+
+    $ make
+    $ make install
+
+
+        Build options
+        =============
+
+CFLAGS: You can set values to CFLAGS to add for instance
+custom include paths (mostly if you have some <somefile.h>
+not found errors).
+
+LDFLAGS: You can also set values LDFLAGS to include custom
+library paths (if you have kind of "/bin/ld can not find
+-lsomething").
+
+Complete example:
+
+    $ make CFLAGS="-Isomeincludedir" LDFLAGS="-Lsomelibdir"
+
+
+        Install options
+        ===============
+
+You can change the default paths for the install target.
+There is also a DESTDIR variable for package managers.
+
+Configurable things and their defaults values are:
+
+  prefix  = $(HOME)
+  libdir  = $(prefix)/lib
+  bindir  = $(prefix)/bin
+
+And these additional options for the gui:
+
+  icondir = $(prefix)/share/icons/hicolor/scallable/apps
+  deskdir = $(prefix)/share/applications
+
+
+Example to prepare flutio for package managers:
+
+    $ make prefix="/usr" DESTDIR="$HOME/mytmpdir" install
+
+
+===============================================================================
+# TODO
+
 maintenant:
 - gerer correctement les playlist et chargement à l'avance, refactorer
-avec playlist.c pour avoir un truc clean sans bugs.
+avec playlist.tcl pour avoir un truc clean sans bugs.
 - gerer correctement les effets, refactorer avec efx_*.c pour avoir un
 truc clean comprehensible et sans bugs.
 - utiliser animcurve.c pour les animations des effets, pareil, pour y
@@ -35,7 +183,7 @@ annocer le démarage imminent, puis l'osd s'affiche pour annoncer normalement
 la piste courante.
 - sauvegarder/charger playliste
 
-# gestion de collection
+gestion de collection
 voir:
 - man fflush, man fsync pour atomicité, et man rename pour un genre de
 journalisation et atomicité genre:
@@ -43,12 +191,4 @@ journalisation et atomicité genre:
     fflush(fd);
     fsync(fd);
     rename(fd, "old", "new");
-Pour editer/gerer la collection il y aura:
 
-- les filtres utilisateurs
-- les fichiers .fluconf dans le système de fichier pour appliquer
-des tags à un ensemble de fichiers
-- un fichier .csv à éditer par l'utilisateur pour editer les tags
-ou pouvoir utiliser ce fichier pour importer dans un autre lecteur, ou
-"pousser" les informations du .csv dans les fichiers audio avec un script
-bash ou autre.

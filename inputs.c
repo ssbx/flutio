@@ -45,12 +45,12 @@ Inputs_Load(char* path, void* handle)
     void (*input_info)(InputPlugin_Info_T *info);
 
     /* get input plugin info */
-    input_info = dlsym(handle, "InputPlugin_Info");
+    input_info = dlsym(handle, "Flutio_InputPlugin_Info");
     error = dlerror();
     if (error != NULL) {
         dlclose(handle);
         fprintf(stderr,
-                "Could not get Flutio_InputInfo function: %s\n", error);
+                "Could not get Flutio_InputPlugin_Info function: %s\n", error);
         return 1;
     }
 
@@ -93,7 +93,7 @@ Inputs_Open(char* fname) {
 float*
 Inputs_Read(Input_T* in, int want, int* got)
 {
-    return in->plugin->info.read(in->data, want, got);
+    return in->plugin->info.frameGen.read(in->data, want, got);
 }
 
 void

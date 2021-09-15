@@ -90,13 +90,15 @@ static const Tcl_ChannelType unixsocketChannelType = {
 int
 Tclunixsocket_Init(Tcl_Interp *interp)
 {
+    Tcl_Namespace *nsPtr;
+
     if (Tcl_InitStubs(interp, TCL_VERSION, 0) == NULL)
         return TCL_ERROR;
 
+    if ((nsPtr = Tcl_CreateNamespace(interp, "::unixsocket", NULL, NULL)) == NULL)
+        return TCL_ERROR;
 
-    Tcl_Namespace *nsPtr =
-        Tcl_CreateNamespace(interp, "::unixsocket", NULL, NULL);
-    if (nsPtr == NULL)
+    if (Tcl_PkgProvide(interp, "unixsocket", "1.0") != TCL_OK)
         return TCL_ERROR;
 
     Tcl_CreateObjCommand(interp,

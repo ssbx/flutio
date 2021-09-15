@@ -177,12 +177,14 @@ taglib_get(
 int
 Tcltaglib_Init(Tcl_Interp *interp)
 {
+    Tcl_Namespace *nsPtr;
     if (Tcl_InitStubs(interp, TCL_VERSION, 0) == NULL)
         return TCL_ERROR;
 
-    Tcl_Namespace *nsPtr = 
-                    Tcl_CreateNamespace(interp, "::taglib", NULL, NULL);
-    if (nsPtr == NULL)
+    if ((nsPtr = Tcl_CreateNamespace(interp, "::taglib", NULL, NULL)) == NULL)
+        return TCL_ERROR;
+
+    if (Tcl_PkgProvide(interp, "taglib", "1.0") != TCL_OK)
         return TCL_ERROR;
 
     Tcl_CreateObjCommand(interp, "::taglib::get", taglib_get, NULL, NULL);

@@ -35,15 +35,13 @@
 #define FLUTIO_OUTPUT_API_GETFRAMES 0
 
 #ifndef FLUTIO_MAIN_BUILD // only for plugin include
-    int PluginType() {
-        return FLUTIO_PLUGIN_TYPE_OUTPUT;
-    }
+    int Flutio_PluginType() { return FLUTIO_PLUGIN_TYPE_OUTPUT; }
 
     /*
-    * Functions available to the plugin
-    */
+     * Functions available to the plugin
+     */
     float* (*Player_GetFrames)(int,int*);
-    void OutputPlugin_Api(int index, void* fun) {
+    void Flutio_OutputPlugin_Api(int index, void* fun) {
         switch (index) {
             case FLUTIO_OUTPUT_API_GETFRAMES: {
                 Player_GetFrames = (float* (*)(int, int*)) fun;
@@ -95,6 +93,6 @@ typedef struct _OutputPlugin_Info_T {
  * The flutio_api_t struct contains flutio function available to
  * plugins.
  */
-
+ void Flutio_OutputInfo(OutputPlugin_Info_T *info);
 
 #endif // OUTPUT_PLUGIN_H

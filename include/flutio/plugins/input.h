@@ -31,12 +31,11 @@
 #ifndef FLUTIO_INPUT_PLUGIN_H
 #define FLUTIO_INPUT_PLUGIN_H
 #include <flutio/plugins/common.h>
+#include <flutio/interfaces/framegen.h>
 
-#ifndef FLUTIO_MAIN_BUILD // only for plugin include
-    int PluginType() {
-        return FLUTIO_PLUGIN_TYPE_INPUT;
-    }
-#endif // FLUTIO_MAIN_BUILD
+#ifndef FLUTIO_MAIN_BUILD
+    int Flutio_PluginType() { return FLUTIO_PLUGIN_TYPE_INPUT; }
+#endif
 
 /*
  * To write a plugin for Flutio:
@@ -53,16 +52,15 @@
  * Input plugin interface
  */
 typedef struct _InputPlugin_Info_T {
-    char *name;
-    int	revision;
-    int (*concerned)(char*);
-    PluginData_T (*open)(char*);
-    float* (*read)(PluginData_T,int,int*);
-    int (*getRate)(PluginData_T);
-    int (*getFrameCount)(PluginData_T);
-    int (*getChannelCount)(PluginData_T);
-    void (*close)(PluginData_T);
-    int (*seek)(PluginData_T,int,int);
+    char          *name;
+    int	           revision;
+    FrameGen_I     frameGen;
+    int          (*concerned) (char*);
+    char**       (*listOptions)();
+    char*        (*getOption) (char*);
+    int          (*setOption) (char*,char*);
+    PluginData_T (*open)      (char*);
+    void         (*close)     (PluginData_T);
 } InputPlugin_Info_T;
 
 /*
@@ -72,6 +70,6 @@ typedef struct _InputPlugin_Info_T {
  * input_info_t is self explanatory, see default flutio plugins
  * source for examples.
  */
-void InputPlugin_Info(InputPlugin_Info_T *info);
+void Flutio_InputPlugin_Info(InputPlugin_Info_T *info);
 
 #endif // FLUTIO_INPUT_PLUGIN_H

@@ -26,42 +26,37 @@
 # IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-RM     ?= rm -f
-CC 	   ?= cc
-CFLAGS += -fPIC -I../include
+CXXFLAGS = -fPIC -DUSE_TCL_STUBS -I/usr/include/tcl8.6 -Iinclude
+LDFLAGS  = -L/usr/lib -ltclstub8.6 -ltag
+INSTALL ?= install
 
-default: all
-
-
-#######################################################################
-# inputLibsndfile.so
-INPUT_SNDFILE = input_libsndfile
-INPUT_SNDFILE_LDFLAGS = -lsndfile
-$(INPUT_SNDFILE).so: $(INPUT_SNDFILE).o
-	$(CC) -shared -o $(INPUT_SNDFILE).so $(INPUT_SNDFILE).o $(INPUT_SNDFILE_LDFLAGS)
-
-#######################################################################
-# outputAlsa.so
-OUTPUT_ALSA   = output_alsa
-OUTPUT_ALSA_LDFLAGS = -lasound -lpthread
-$(OUTPUT_ALSA).so: $(OUTPUT_ALSA).o
-	$(CC) -shared -o $(OUTPUT_ALSA).so $(OUTPUT_ALSA).o $(OUTPUT_ALSA_LDFLAGS)
-
-
-
+#
+# Default target
+#
 .PHONY: all
-all: 					\
-	$(INPUT_SNDFILE).so \
-	$(OUTPUT_ALSA).so
+all: pkgIndex.tcl
 
-.PHONY: update
-update:
-	$(CC) -MM -I../include *c > Makefile.objects
+#
+# the tcl pkg index
+#
+pkgIndex.tcl: libtcltaglib.so
+	echo "pkg_mkIndex . *.so" | tclsh
+
+#
+# libtcltaglib.so
+#
+libtcltaglib.so: tcltaglib.cpp
+	$(CXX) -shared $(CXXFLAGS) -o libtcltaglib.so tcltaglib.cpp $(LDFLAGS)
+
 
 .PHONY: clean
 clean:
-	$(RM) $(INPUT_SNDFILE).so $(INPUT_SNDFILE).o
-	$(RM) $(OUTPUT_ALSA).so $(OUTPUT_ALSA).o
+	$(RM) libtcltaglib.so pkgIndex.tcl
 
-include Makefile.objects
+.PHONY: install
+tclpkgdir ?= $(HOME)/pkgs
+install:
+	$(INSTALL) -d -m 755 '$(DESTDIR)$(tclpkgdir)/tcltaglib'
+	$(INSTALL) -m 444 libtcltaglib.so '$(DESTDIR)$(tclpkgdir)/tcltaglib'
+	$(INSTALL) -m 444 pkgIndex.tcl '$(DESTDIR)$(tclpkgdir)/tcltaglib'
 

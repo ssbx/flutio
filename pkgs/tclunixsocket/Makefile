@@ -26,42 +26,43 @@
 # IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-RM     ?= rm -f
-CC 	   ?= cc
-CFLAGS += -fPIC -I../include
+CFLAGS = -fPIC -DUSE_TCL_STUBS -I/usr/include/tcl8.6 -Iinclude
+LDFLAGS = -L/usr/lib -ltclstub8.6
+INSTALL ?= install
 
-default: all
-
-
-#######################################################################
-# inputLibsndfile.so
-INPUT_SNDFILE = input_libsndfile
-INPUT_SNDFILE_LDFLAGS = -lsndfile
-$(INPUT_SNDFILE).so: $(INPUT_SNDFILE).o
-	$(CC) -shared -o $(INPUT_SNDFILE).so $(INPUT_SNDFILE).o $(INPUT_SNDFILE_LDFLAGS)
-
-#######################################################################
-# outputAlsa.so
-OUTPUT_ALSA   = output_alsa
-OUTPUT_ALSA_LDFLAGS = -lasound -lpthread
-$(OUTPUT_ALSA).so: $(OUTPUT_ALSA).o
-	$(CC) -shared -o $(OUTPUT_ALSA).so $(OUTPUT_ALSA).o $(OUTPUT_ALSA_LDFLAGS)
-
-
-
+#
+# Default target
+#
 .PHONY: all
-all: 					\
-	$(INPUT_SNDFILE).so \
-	$(OUTPUT_ALSA).so
+all: pkgIndex.tcl
 
-.PHONY: update
-update:
-	$(CC) -MM -I../include *c > Makefile.objects
 
+#
+# the tcl pkg index
+#
+pkgIndex.tcl: libtclunixsocket.so
+	echo "pkg_mkIndex . *.so" | tclsh
+
+#
+# libtclunixsocket.so
+#
+libtclunixsocket.so: tclunixsocket.c
+	$(CC) -shared $(CFLAGS) -o libtclunixsocket.so tclunixsocket.c $(LDFLAGS)
+
+#
+# clean
+#
 .PHONY: clean
 clean:
-	$(RM) $(INPUT_SNDFILE).so $(INPUT_SNDFILE).o
-	$(RM) $(OUTPUT_ALSA).so $(OUTPUT_ALSA).o
+	$(RM) pkgIndex.tcl libtclunixsocket.so
 
-include Makefile.objects
+#
+# install
+#
+.PHONY: install
+tclpkgdir ?= $(HOME)/pkgs
+install: all
+	$(INSTALL) -d -m 755 '$(DESTDIR)$(tclpkgdir)/tclunixsocket'
+	$(INSTALL) -m 444 pkgIndex.tcl '$(DESTDIR)$(tclpkgdir)/tclunixsocket'
+	$(INSTALL) -m 444 libtclunixsocket.so '$(DESTDIR)$(tclpkgdir)/tclunixsocket'
 

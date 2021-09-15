@@ -26,51 +26,29 @@
 # IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-RM      = rm -f
-MAKE    = make
-INSTALL = install
-LN      = ln
+export RM      = rm -f
+export MAKE    = make
+export INSTALL = install
+export LN      = ln
 
 FLUTIOLIB  = libtclflutio.so
-TAGLIBLIB  = libtcltaglib.so
-USOCKETLIB = libtclunixsocket.so
-ALLLIBS    = $(FLUTIOLIB) $(USOCKETLIB) $(TAGLIBLIB)
 
-CFLAGS = -fPIC -DUSE_TCL_STUBS -I/usr/include/tcl8.6 -Iinclude
-CXXFLAGS = $(CFLAGS)
+CFLAGS  = -fPIC -DUSE_TCL_STUBS -I/usr/include/tcl8.6 -Iinclude
 LDFLAGS = -L/usr/lib -ltclstub8.6
 
 #
 # Default target
 #
 .PHONY: all
-all: $(ALLLIBS)
+all: $(FLUTIOLIB)
 	$(MAKE) -C plugins
-
-
-#
-# libtcltaglib.so
-#
-TAGLIB_LDFLAGS = $(LDFLAGS) -ltag
-TAGLIB_OBJECTS = tcltaglib.o
-$(TAGLIBLIB): $(TAGLIB_OBJECTS)
-	$(CXX) -shared -o $(TAGLIBLIB) $(TAGLIB_OBJECTS) $(TAGLIB_LDFLAGS)
-
-
-#
-# libtclunixsocket.so
-#
-USOCKET_LDFLAGS = $(LDFLAGS)
-USOCKET_OBJECTS = tclunixsocket.o
-$(USOCKETLIB): $(USOCKET_OBJECTS)
-	$(CC) -shared -o $(USOCKETLIB) $(USOCKET_OBJECTS) $(USOCKET_LDFLAGS)
-
+	$(MAKE) -C pkgs
 
 #
 # libtclflutio.so
 #
 FLUTIO_OBJECTS = tclflutio.o player.o plugins.o track.o inputs.o \
-				outputs.o
+                 outputs.o pre_outputs.o post_inputs.o fade_fx.o
 FLUTIO_LDFLAGS = $(LDFLAGS) -lpthread
 $(FLUTIOLIB): $(FLUTIO_OBJECTS)
 	$(CC) -shared -o $(FLUTIOLIB) $(FLUTIO_OBJECTS) $(FLUTIO_LDFLAGS)
@@ -81,8 +59,9 @@ $(FLUTIOLIB): $(FLUTIO_OBJECTS)
 #
 .PHONY: clean
 clean:
-	$(RM) $(ALLLIBS) $(FLUTIO_OBJECTS) $(USOCKET_OBJECTS) $(TAGLIB_OBJECTS)
+	$(RM) $(FLUTIO_OBJECTS) $(FLUTIOLIB)
 	$(MAKE) -C plugins clean
+	$(MAKE) -C pkgs clean
 
 #
 # update
@@ -96,22 +75,27 @@ update:
 # install
 #
 .PHONY: install
-prefix = $(HOME)
-bindir = $(prefix)/bin
-mandir = $(prefix)/man
-incdir = $(prefix)/include
-libexecdir = $(prefix)/libexec
+prefix 			 = $(HOME)
+bindir 			 = $(prefix)/bin
+mandir 			 = $(prefix)/man
+incdir 			 = $(prefix)/include
+libexecdir 		 = $(prefix)/libexec
+flutio_inst_dir  = $(libexecdir)/flutio
+flutio_inc_dir   = $(incdir)/flutio
+export tclpkgdir = $(flutio_inst_dir)/pkgs
 install: all
 	$(INSTALL) -d -m 755 '$(DESTDIR)$(bindir)'
 	$(INSTALL) -d -m 755 '$(DESTDIR)$(mandir)'
-	$(INSTALL) -d -m 755 '$(DESTDIR)$(incdir)/flutio/plugins'
-	$(INSTALL) -d -m 755 '$(DESTDIR)$(libexecdir)/flutio'
-	$(INSTALL) -d -m 755 '$(DESTDIR)$(libexecdir)/flutio/plugins'
-	$(INSTALL) -m 444 $(ALLLIBS) '$(DESTDIR)$(libexecdir)/flutio'
-	$(INSTALL) -m 444 plugins/*.so '$(DESTDIR)$(libexecdir)/flutio/plugins'
-	$(INSTALL) -m 444 include/flutio/plugins/common.h '$(DESTDIR)$(incdir)/flutio/plugins'
-	$(INSTALL) -m 444 include/flutio/plugins/input.h '$(DESTDIR)$(incdir)/flutio/plugins'
-	$(INSTALL) -m 444 include/flutio/plugins/output.h '$(DESTDIR)$(incdir)/flutio/plugins'
-	$(INSTALL) -m 555 flutio '$(DESTDIR)$(libexecdir)/flutio/'
-	$(LN) -fs '$(libexecdir)/flutio/flutio' '$(DESTDIR)$(bindir)'
+	$(INSTALL) -d -m 755 '$(DESTDIR)$(flutio_inc_dir)/plugins'
+	$(INSTALL) -d -m 755 '$(DESTDIR)$(flutio_inc_dir)/interfaces'
+	$(INSTALL) -d -m 755 '$(DESTDIR)$(flutio_inst_dir)'
+	$(INSTALL) -d -m 755 '$(DESTDIR)$(flutio_inst_dir)/plugins'
+	$(INSTALL) -d -m 755 '$(DESTDIR)$(flutio_inst_dir)/pkgs'
+	$(INSTALL) -m 444 libtclflutio.so '$(DESTDIR)$(flutio_inst_dir)'
+	$(INSTALL) -m 444 plugins/*.so '$(DESTDIR)$(flutio_inst_dir)/plugins'
+	$(INSTALL) -m 444 include/flutio/plugins/*.h '$(DESTDIR)$(flutio_inc_dir)/plugins'
+	$(INSTALL) -m 444 include/flutio/interfaces/*.h '$(DESTDIR)$(flutio_inc_dir)/plugins'
+	$(INSTALL) -m 555 flutio '$(DESTDIR)$(flutio_inst_dir)'
+	$(LN) -fs '$(flutio_inst_dir)/flutio' '$(DESTDIR)$(bindir)'
+	make -C pkgs install
 

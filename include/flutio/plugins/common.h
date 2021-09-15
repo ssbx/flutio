@@ -40,4 +40,19 @@
 
 typedef void* PluginData_T;
 
+typedef struct _FlutioApi_T {
+} FlutioApi_T;
+
+#ifndef FLUTIO_MAIN_BUILD // only for plugin include
+
+    static FlutioApi_T* g_api;
+
+    void Flutio_ApiSet(FlutioApi_T *api) {
+        g_api = api;
+    }
+
+#endif // FLUTIO_MAIN_BUILD
+
 #endif // FLUTIO_PLUGINS_COMMON_H
+
+

@@ -33,10 +33,10 @@ exec tclsh "$0" ${1+"$@"}
 
 namespace eval flutio {
     variable usage \
-"Usage: [info script] COMMAND
+"Usage: [info script] \[/path/to/startup.cfg\] COMMAND
 
 This command is used by flutio to start/connect a flutio processusing the
-configuration file located in \$HOME/.flutio/flutio.config.
+startup config file located in \$HOME/.flutio/startup.cfg
 
 
 Where COMMAND can be:
@@ -69,10 +69,12 @@ while {[file type $flutio_script] == "link"} {
 ###########################################################################
 # Catch missing libs
 set ::flutio::libdir [file dirname $flutio_script]
+lappend auto_path [file join $::flutio::libdir pkgs]
 if [catch {
-        package require Tcl 8.6
-        load [file join $::flutio::libdir libtcltaglib.so]
-        load [file join $::flutio::libdir libtclunixsocket.so]
+        package require Tcl         8.6
+        package require unixsocket  1.0
+        package require taglib      1.0
+        package require tclreadline 2.3
         load [file join $::flutio::libdir libtclflutio.so] } msg] {
     puts stderr "flutio won't start: $msg"
     exit 1
@@ -94,7 +96,8 @@ set ::flutio::cfgfile  [file join $::flutio::userdir flutio.config]
 set ::flutio::pidfile  [file join $::flutio::userdir flutio.pid]
 set ::flutio::logfile  [file join $::flutio::userdir flutio.log]
 set ::flutio::sockfile [file join $::flutio::userdir flutio.socket]
-set ::flutio::plugdirs [list  [file join $::flutio::libdir  plugins] \
+set ::flutio::plugdirs [list \
+                            [file join $::flutio::libdir  plugins] \
                             [file join $::flutio::userdir plugins]]
 
 ###########################################################################
@@ -222,7 +225,7 @@ switch [lindex $argv 0] {
 }
 
 ###########################################################################
-# !!! ONLY THE "flutio daemon" COMMAND GOES OVER THERE !!!!
+# !!!         ONLY THE "flutio daemon" COMMAND GOES OVER THERE         !!!!
 ###########################################################################
 
 ###########################################################################

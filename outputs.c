@@ -76,23 +76,23 @@ Outputs_Load(char* path, void* handle)
 
     /* set output plugin "getFrame" functions */
     void (*out_api)(int,void*);
-    out_api = dlsym(handle, "OutputPlugin_Api");
+    out_api = dlsym(handle, "Flutio_OutputPlugin_Api");
     error = dlerror();
     if (error != NULL) {
         dlclose(handle);
         fprintf(stderr,
-                "Could not get OutputPlugin_Api variable: %s\n", error);
+                "Could not get Flutio_OutputPlugin_Api variable: %s\n", error);
         return 1;
     }
     out_api(FLUTIO_OUTPUT_API_GETFRAMES, Player_GetFrames);
 
     /* get output plugin info */
-    output_info = dlsym(handle, "OutputPlugin_Info");
+    output_info = dlsym(handle, "Flutio_OutputPlugin_Info");
     error = dlerror();
     if (error != NULL) {
         dlclose(handle);
         fprintf(stderr,
-                "Could not get OutputPlugin_Info function: %s\n", error);
+                "Could not get Flutio_OutputPlugin_Info function: %s\n", error);
         return 1;
     }
 
