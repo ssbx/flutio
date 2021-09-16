@@ -31,7 +31,7 @@
 #ifndef FLUTIO_INPUT_PLUGIN_H
 #define FLUTIO_INPUT_PLUGIN_H
 #include <flutio/plugins/common.h>
-#include <flutio/interfaces/framegen.h>
+#include <flutio/interfaces/frame_generator.h>
 
 #ifndef FLUTIO_MAIN_BUILD
     int Flutio_PluginType() { return FLUTIO_PLUGIN_TYPE_INPUT; }
@@ -51,7 +51,7 @@
 /*
  * Input plugin interface
  */
-typedef struct _InputPlugin_Info_T {
+typedef struct _InputPluginInfo_T {
     char          *name;
     int	           revision;
     FrameGen_I     frameGen;
@@ -61,7 +61,7 @@ typedef struct _InputPlugin_Info_T {
     int          (*setOption) (char*,char*);
     PluginData_T (*open)      (char*);
     void         (*close)     (PluginData_T);
-} InputPlugin_Info_T;
+} InputPluginInfo_T;
 
 /*
  * This is the unique function that must be implemented on the
@@ -70,6 +70,6 @@ typedef struct _InputPlugin_Info_T {
  * input_info_t is self explanatory, see default flutio plugins
  * source for examples.
  */
-void Flutio_InputPlugin_Info(InputPlugin_Info_T *info);
+void Flutio_InputPluginInfo(InputPluginInfo_T*);
 
 #endif // FLUTIO_INPUT_PLUGIN_H

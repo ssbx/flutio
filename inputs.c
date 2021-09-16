@@ -41,16 +41,16 @@ Inputs_Load(char* path, void* handle)
 {
     char *error;
 
-    InputPlugin_Info_T info;
-    void (*input_info)(InputPlugin_Info_T *info);
+    InputPluginInfo_T info;
+    void (*input_info)(InputPluginInfo_T *info);
 
     /* get input plugin info */
-    input_info = dlsym(handle, "Flutio_InputPlugin_Info");
+    input_info = dlsym(handle, "Flutio_InputPluginInfo");
     error = dlerror();
     if (error != NULL) {
         dlclose(handle);
         fprintf(stderr,
-                "Could not get Flutio_InputPlugin_Info function: %s\n", error);
+                "Could not get Flutio_InputPluginInfo function: %s\n", error);
         return 1;
     }
 

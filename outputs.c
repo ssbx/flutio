@@ -70,8 +70,8 @@ int
 Outputs_Load(char* path, void* handle)
 {
     char *error;
-    OutputPlugin_Info_T info;
-    void (*output_info)(OutputPlugin_Info_T *info);
+    OutputPluginInfo_T info;
+    void (*output_info)(OutputPluginInfo_T *info);
 
 
     /* set output plugin "getFrame" functions */
@@ -87,12 +87,12 @@ Outputs_Load(char* path, void* handle)
     out_api(FLUTIO_OUTPUT_API_GETFRAMES, Player_GetFrames);
 
     /* get output plugin info */
-    output_info = dlsym(handle, "Flutio_OutputPlugin_Info");
+    output_info = dlsym(handle, "Flutio_OutputPluginInfo");
     error = dlerror();
     if (error != NULL) {
         dlclose(handle);
         fprintf(stderr,
-                "Could not get Flutio_OutputPlugin_Info function: %s\n", error);
+                "Could not get Flutio_OutputPluginInfo function: %s\n", error);
         return 1;
     }
 

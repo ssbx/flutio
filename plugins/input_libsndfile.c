@@ -49,7 +49,7 @@ static int  SFile_getRate(PluginData_T);
 static int  SFile_getFrames(PluginData_T);
 static int  SFile_getChannels(PluginData_T);
 
-void Flutio_InputPlugin_Info(InputPlugin_Info_T *info)
+void Flutio_InputPluginInfo(InputPluginInfo_T *info)
 {
     info->name            = PLUGIN_NAME;
     info->revision        = PLUGIN_REVISION;
@@ -60,7 +60,6 @@ void Flutio_InputPlugin_Info(InputPlugin_Info_T *info)
     info->frameGen.getRate         = SFile_getRate;
     info->frameGen.getFrameCount   = SFile_getFrames;
     info->frameGen.getChannelCount = SFile_getChannels;
-    fprintf(stderr, "sucessssssssssssssssssss!\n");
 }
 
 /*

@@ -1,7 +1,9 @@
 ===============================================================================
 # COMMANDES
-Plutot qu'un fichier de configuration, un "startup script" a la cisco qui
-permet d'activer, configurer, ordonner ... les plugins.
+Plutot qu'un fichier de configuration, un "startup script" à la cisco qui
+permet d'activer, configurer, ordonner ... les plugins. Super souple.
+En plus ça complique le bidule du coup, si des boites veulent l'utiliser, ils
+pouront me contacter héhéhé.
 
 ===============================================================================
 # MOTIVATION

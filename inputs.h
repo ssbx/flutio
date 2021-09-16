@@ -37,15 +37,15 @@ typedef struct _InputPlugin_T InputPlugin_T;
 typedef struct _InputPlugin_T {
     void* handle;
     char* path;
-    InputPlugin_Info_T info;
+    InputPluginInfo_T info;
     InputPlugin_T *next;
-} InputPlugin_T;
+} InputPlugin2_T;
 
 extern InputPlugin_T *G_Inputs_plugins;
 
 
 typedef struct _Input_T {
-    InputPlugin_T *plugin;
+    InputPlugin2_T *plugin;
     PluginData_T   data;
 } Input_T;
 

@@ -1,8 +1,15 @@
 input_libsndfile.o: input_libsndfile.c ../include/flutio/plugins/input.h \
  ../include/flutio/plugins/common.h \
- ../include/flutio/interfaces/framegen.h
+ ../include/flutio/interfaces/frame_generator.h
 output_alsa.o: output_alsa.c ../include/flutio/plugins/output.h \
  ../include/flutio/plugins/common.h
-post_input_channelconvert.o: post_input_channelconvert.c
-post_input_rateconvert.o: post_input_rateconvert.c
+post_input_channelconvert.o: post_input_channelconvert.c \
+ ../include/flutio/plugins/post_input.h \
+ ../include/flutio/plugins/common.h \
+ ../include/flutio/interfaces/frame_generator.h
+post_input_rateconvert.o: post_input_rateconvert.c \
+ ../include/flutio/plugins/post_input.h \
+ ../include/flutio/plugins/common.h \
+ ../include/flutio/interfaces/frame_generator.h
+pre_output_multioutput.o: pre_output_multioutput.c
 pre_output_softvolume.o: pre_output_softvolume.c

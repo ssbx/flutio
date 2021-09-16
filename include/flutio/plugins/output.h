@@ -70,7 +70,7 @@ typedef struct _OutputParams_T {
 /*
  * Output plugin callbacks
  */
-typedef struct _OutputPlugin_Info_T {
+typedef struct _OutputPluginInfo_T {
     char *name;
     int	revision;
     int (*Open)(OutputParams_T*);
@@ -79,7 +79,7 @@ typedef struct _OutputPlugin_Info_T {
     int (*GetChannels)();
     char* (*GetFormFromConfig)();
     int (*SetConfigFromForm)(char*);
-} OutputPlugin_Info_T;
+} OutputPluginInfo_T;
 
 /*
  * void Flutio_OutputInfo(Flutio_OutputInfo_T *info);
@@ -93,6 +93,6 @@ typedef struct _OutputPlugin_Info_T {
  * The flutio_api_t struct contains flutio function available to
  * plugins.
  */
- void Flutio_OutputInfo(OutputPlugin_Info_T *info);
+ void Flutio_OutputPluginInfo(OutputPluginInfo_T*);
 
 #endif // OUTPUT_PLUGIN_H

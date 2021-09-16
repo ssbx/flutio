@@ -31,13 +31,13 @@
 #ifndef FLUTIO_POST_INPUT_PLUGIN_H
 #define FLUTIO_POST_INPUT_PLUGIN_H
 #include <flutio/plugins/common.h>
+#include <flutio/interfaces/frame_generator.h>
 
 #ifndef FLUTIO_MAIN_BUILD // only for plugin include
-    int PluginType() {
+    int Flutio_PluginType() {
         return FLUTIO_PLUGIN_TYPE_POST_INPUT;
     }
 #endif // FLUTIO_MAIN_BUILD
-#include <flutio/plugins/input.h>
 
 /*
  * To write a plugin for Flutio:
@@ -53,13 +53,13 @@
 /*
  * PostInput plugin interface
  */
-typedef struct _PostInputPlugin_Info_T {
+typedef struct _PostInputPluginInfo_T {
     char *name;
     int	revision;
-    InputPlugin_Info_T* getFrameGeneratorInterface(PluginData_T);
-    int concerned(InputPlugin_Info_T*);
-    PluginData_T init(InputPlugin_Info_T*);
-} PostInputPlugin_Info_T;
+    int priority;
+    FrameGen_I*  getFrameGen(PluginData_T);
+    PluginData_T init(FrameGen_I*);
+} PostInputPluginInfo_T;
 
 /*
  * This is the unique function that must be implemented on the
@@ -68,6 +68,6 @@ typedef struct _PostInputPlugin_Info_T {
  * input_info_t is self explanatory, see default flutio plugins
  * source for examples.
  */
-void PostInputPlugin_Info(PostInputPlugin_Info_T *info);
+void Flutio_PostInputPluginInfo(PostInputPluginInfo_T*);
 
 #endif // FLUTIO_POST_INPUT_PLUGIN_H

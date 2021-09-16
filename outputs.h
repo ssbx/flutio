@@ -37,7 +37,7 @@ typedef struct _OutputPlugin_T OutputPlugin_T;
 typedef struct _OutputPlugin_T {
     void* handle;
     char* path;
-    OutputPlugin_Info_T info;
+    OutputPluginInfo_T info;
     OutputPlugin_T *next;
 } OutputPlugin_T;
 
