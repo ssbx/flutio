@@ -35,7 +35,7 @@
 #define FLUTIO_OUTPUT_API_GETFRAMES 0
 
 #ifndef FLUTIO_MAIN_BUILD // only for plugin include
-    PluginType_E Flutio_PluginType() { return FLUTIO_PLUGIN_TYPE_OUTPUT; }
+    PluginType_T Flutio_PluginType() { return FLUTIO_PLUGIN_TYPE_OUTPUT; }
 
     /*
      * Functions available to the plugin
@@ -62,15 +62,15 @@
  *  file.
  */
 
-typedef struct _OutputParams_S {
+typedef struct {
     int wanted_rate;
     int wanted_channels;
-} OutputParams_S;
+} OutputParams_T;
 
 /*
  * Output plugin callbacks
  */
-typedef struct _OutputPluginInfo_S {
+typedef struct {
     char *name;
     int	revision;
     int (*Open)(OutputParams_T*);
@@ -79,7 +79,7 @@ typedef struct _OutputPluginInfo_S {
     int (*GetChannels)();
     char* (*GetFormFromConfig)();
     int (*SetConfigFromForm)(char*);
-} OutputPluginInfo_S;
+} OutputPluginInfo_T;
 
 /*
  * void Flutio_OutputInfo(Flutio_OutputInfo_T *info);
@@ -93,6 +93,6 @@ typedef struct _OutputPluginInfo_S {
  * The flutio_api_t struct contains flutio function available to
  * plugins.
  */
- void Flutio_OutputPluginInfo(OutputPluginInfo_S*);
+ void Flutio_OutputPluginInfo(OutputPluginInfo_T*);
 
 #endif // OUTPUT_PLUGIN_H

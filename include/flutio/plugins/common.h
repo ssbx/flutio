@@ -38,24 +38,24 @@ typedef enum {
     FLUTIO_PLUGIN_TYPE_OUTPUT     = 3,
     FLUTIO_PLUGIN_TYPE_MSG_FORMAT = 4,
     FLUTIO_PLUGIN_TYPE_FADE_EFFECT= 5
-} PluginType_E;
+} PluginType_T;
 
 typedef void* PluginData_T;
 
-typedef enum {INT_OPTION, FLOAT_OPTION, STRING_OPTION} PluginOptionType_E;
+typedef enum {INT_OPTION, FLOAT_OPTION, STRING_OPTION} PluginOptionType_T;
 typedef union {
     int   intVal;
     float floatVal;
     char *stringVal;
-} PluginOptionValue_U;
+} PluginOptionValue_T;
 
-typedef struct _PluginOption_T {
+typedef struct {
     char* name;
-    PluginOptionType_E  type;
-    PluginOptionValue_U value;
+    PluginOptionType_T  type;
+    PluginOptionValue_T value;
 } PluginOption_T;
 
-typedef struct _FlutioApi_T {
+typedef struct {
 } FlutioApi_T;
 
 #ifndef FLUTIO_MAIN_BUILD // only for plugin include

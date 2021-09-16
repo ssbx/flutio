@@ -34,7 +34,7 @@
 #include <flutio/interfaces/frame_generator.h>
 
 #ifndef FLUTIO_MAIN_BUILD // only for plugin include
-    PluginType_E Flutio_PluginType() {
+    PluginType_T Flutio_PluginType() {
         return FLUTIO_PLUGIN_TYPE_POST_INPUT;
     }
 #endif // FLUTIO_MAIN_BUILD
@@ -59,7 +59,7 @@ typedef struct {
     int priority;
     FrameGen_I*  getFrameGen(PluginData_T);
     PluginData_T init(FrameGen_I*);
-} PostInputPluginInfo_S;
+} PostInputPluginInfo_T;
 
 /*
  * This is the unique function that must be implemented on the
@@ -68,6 +68,6 @@ typedef struct {
  * input_info_t is self explanatory, see default flutio plugins
  * source for examples.
  */
-void Flutio_PostInputPluginInfo(PostInputPluginInfo_S*);
+void Flutio_PostInputPluginInfo(PostInputPluginInfo_T*);
 
 #endif // FLUTIO_POST_INPUT_PLUGIN_H
