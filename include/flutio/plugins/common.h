@@ -31,14 +31,29 @@
 #ifndef FLUTIO_PLUGINS_COMMON_H
 #define FLUTIO_PLUGINS_COMMON_H
 
-#define FLUTIO_PLUGIN_TYPE_INPUT       0
-#define FLUTIO_PLUGIN_TYPE_POST_INPUT  1
-#define FLUTIO_PLUGIN_TYPE_PRE_OUTPUT  2
-#define FLUTIO_PLUGIN_TYPE_OUTPUT      3
-#define FLUTIO_PLUGIN_TYPE_MSG_FORMAT  4
-#define FLUTIO_PLUGIN_TYPE_FADE_EFFECT 5
+typedef enum {
+    FLUTIO_PLUGIN_TYPE_INPUT      = 0,
+    FLUTIO_PLUGIN_TYPE_POST_INPUT = 1,
+    FLUTIO_PLUGIN_TYPE_PRE_OUTPUT = 2,
+    FLUTIO_PLUGIN_TYPE_OUTPUT     = 3,
+    FLUTIO_PLUGIN_TYPE_MSG_FORMAT = 4,
+    FLUTIO_PLUGIN_TYPE_FADE_EFFECT= 5
+} PluginType_E;
 
 typedef void* PluginData_T;
+
+typedef enum {INT_OPTION, FLOAT_OPTION, STRING_OPTION} PluginOptionType_E;
+typedef union {
+    int   intVal;
+    float floatVal;
+    char *stringVal;
+} PluginOptionValue_U;
+
+typedef struct _PluginOption_T {
+    char* name;
+    PluginOptionType_E  type;
+    PluginOptionValue_U value;
+} PluginOption_T;
 
 typedef struct _FlutioApi_T {
 } FlutioApi_T;
