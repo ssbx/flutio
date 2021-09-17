@@ -38,26 +38,32 @@
 #include <errno.h>
 #include <tcl.h>
 
-#define SOCKNAME_TEMPLATE "unixsocket%d"
-#define SOCKNAME_SIZE      32
+#define SOCKNAME_LENGTH   (10 + sizeof(void*) * 2 + 1)
+#define SOCKNAME_TEMPLATE "unixsocket%lx"
 #define LISTEN_BACKLOG     10
 
-typedef enum { UNIXSOCK_SERVER, UNIXSOCK_CLIENT } unixsocket_type_t;
-typedef struct _unixsocket_state_t unixsocket_state_t;
-typedef struct _unixsocket_state_t {
-    Tcl_Channel       channel;
-    Tcl_Interp       *interp;
-    int               fd;
-    unixsocket_type_t   type;
-    unixsocket_state_t *prev;
-    unixsocket_state_t *next;
-    char             *srv_path;
-    Tcl_Obj          *srv_acceptfun;
-} unixsocket_state_t;
+#if 0
+#define USOCKET_TRACE(...) fprintf(stderr, __VA_ARGS__)
+#else
+#define USOCKET_TRACE(...)
+#endif
 
-static int  unixsocket_listen(
+typedef enum { UNIXSOCK_SERVER, UNIXSOCK_CLIENT } UnixSocketType_T;
+typedef struct _UnixSocketState_T UnixSocketState_T;
+typedef struct _UnixSocketState_T {
+    Tcl_Channel        channel;
+    Tcl_Interp        *interp;
+    int                fd;
+    UnixSocketType_T   type;
+    UnixSocketState_T *prev;
+    UnixSocketState_T *next;
+    char              *path;
+    Tcl_Obj           *srv_acceptfun;
+} UnixSocketState_T;
+
+static int  UnixSocket_Listen(
     ClientData,Tcl_Interp*,int,Tcl_Obj*const objv[]);
-static int  unixsocket_connect(
+static int  UnixSocket_Open(
     ClientData,Tcl_Interp*,int,Tcl_Obj*const objv[]);
 
 static int  unixsocketCloseProc(ClientData,Tcl_Interp*);
@@ -102,19 +108,19 @@ Tclunixsocket_Init(Tcl_Interp *interp)
         return TCL_ERROR;
 
     Tcl_CreateObjCommand(interp,
-            "::unixsocket::listen",  unixsocket_listen,  NULL, NULL);
+            "::unixsocket::listen", UnixSocket_Listen, NULL, NULL);
     Tcl_CreateObjCommand(interp,
-            "::unixsocket::connect",  unixsocket_connect,  NULL, NULL);
+            "::unixsocket::open", UnixSocket_Open, NULL, NULL);
 
     return TCL_OK;
 }
 
 static void
-unixsocketet_accept(
+UnixSocket_Accept(
     ClientData data,
     int        mask)
 {
-    unixsocket_state_t *state = (unixsocket_state_t*) data;
+    UnixSocketState_T *state = (UnixSocketState_T*) data;
 
     struct sockaddr_un addr;
     socklen_t len = sizeof(struct sockaddr_un);
@@ -123,22 +129,22 @@ unixsocketet_accept(
         return;
     }
 
-    fprintf(stderr, "accept! %i\n", sock);
+    USOCKET_TRACE("accept! %i\n", sock);
     fcntl(sock, F_SETFD, FD_CLOEXEC);
 
-    unixsocket_state_t *cstate = ckalloc(sizeof(unixsocket_state_t));
+    UnixSocketState_T *cstate = ckalloc(sizeof(UnixSocketState_T));
     cstate->type = UNIXSOCK_CLIENT;
     cstate->next = NULL;
     cstate->prev = NULL;
     cstate->fd   = sock;
-    cstate->srv_path = NULL;
+    cstate->path = NULL;
     cstate->srv_acceptfun = NULL;
     cstate->interp = NULL;
 
-    char tclname[SOCKNAME_SIZE];
-    sprintf(tclname, SOCKNAME_TEMPLATE, cstate->fd);
+    char tclname[SOCKNAME_LENGTH];
+    sprintf(tclname, SOCKNAME_TEMPLATE, (long) cstate);
 
-    fprintf(stderr, "accept called %s\n", tclname);
+    USOCKET_TRACE("accept called %s\n", tclname);
     cstate->channel = Tcl_CreateChannel(
         &unixsocketChannelType,
         tclname,
@@ -159,7 +165,7 @@ unixsocketet_accept(
         return;
     }
 
-    unixsocket_state_t *tail = state;
+    UnixSocketState_T *tail = state;
     while (tail->next)
         tail = tail->next;
 
@@ -168,25 +174,81 @@ unixsocketet_accept(
 }
 
 static int
-unixsocket_connect(
+UnixSocket_Open(
     ClientData     cdata,
     Tcl_Interp    *interp,
     int            objc,
     Tcl_Obj *const objv[])
 {
+    if (objc != 2) {
+        Tcl_SetObjResult(interp,
+            Tcl_NewStringObj("unixsocket::open requires one argument", -1));
+        return TCL_ERROR;
+    }
+
+    int pathLen;
+    char* serverPath = Tcl_GetStringFromObj(objv[1], &pathLen);
+    if (pathLen > 107) {
+    Tcl_SetObjResult(interp,
+            Tcl_NewStringObj("unixsocket::open requires one argument", -1));
+        return TCL_ERROR;
+
+    }
+
+    if (access(serverPath, R_OK | W_OK) != 0) {
+        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                    "unixsocket::open couldn't access path: %s", serverPath));
+        return TCL_ERROR;
+    }
+
+    int fd = socket(AF_UNIX, SOCK_STREAM, 0);
+    fcntl(fd, F_SETFD, FD_CLOEXEC);
+
+    struct sockaddr_un address;
+    strcpy(address.sun_path, serverPath);
+    address.sun_family = AF_UNIX;
+
+    int ret = connect(fd, (struct sockaddr*) &address,
+                                            sizeof(struct sockaddr_un));
+    if (ret == -1) {
+        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                "unixsocket::open couldn't open socket: %s", serverPath));
+        return TCL_ERROR;
+    }
+
+
+    UnixSocketState_T* state = (UnixSocketState_T*)
+                                    ckalloc(sizeof(UnixSocketState_T));
+
+    char channelName[SOCKNAME_LENGTH];
+    sprintf(channelName, SOCKNAME_TEMPLATE, (long) state);
+    state->next = NULL;
+    state->prev = NULL;
+    state->type = UNIXSOCK_CLIENT;
+    state->interp = interp;
+    state->path = ckalloc(strlen(serverPath) + 1);
+    state->fd = fd;
+    strcpy(state->path, serverPath);
+
+    state->channel = Tcl_CreateChannel(&unixsocketChannelType, channelName,
+        (ClientData) state, (TCL_READABLE | TCL_WRITABLE));
+
+    Tcl_RegisterChannel(interp, state->channel);
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(channelName, -1));
+
     return TCL_OK;
 }
 
 
 static int
-unixsocket_listen(
+UnixSocket_Listen(
     ClientData     cdata,
     Tcl_Interp    *interp,
     int            objc,
     Tcl_Obj *const objv[])
 {
 
-    fprintf(stderr, "listen called\n");
+    USOCKET_TRACE("listen called\n");
 
     if (objc != 3) {
         Tcl_Obj *res = Tcl_GetObjResult(interp);
@@ -254,20 +316,20 @@ unixsocket_listen(
     //
     // Set up tcl channel stuff
     //
-    unixsocket_state_t *state = ckalloc(sizeof(unixsocket_state_t));
+    UnixSocketState_T *state = ckalloc(sizeof(UnixSocketState_T));
     state->type = UNIXSOCK_SERVER;
     state->next = NULL;
     state->prev = NULL;
     state->fd   = sock;
-    state->srv_path = path;
+    state->path = path;
     state->srv_acceptfun = objv[2];
     state->interp = interp;
     Tcl_IncrRefCount(objv[2]);
     Tcl_CreateFileHandler(
-        sock, TCL_READABLE, unixsocketet_accept, (ClientData) state);
+        sock, TCL_READABLE, UnixSocket_Accept, (ClientData) state);
 
-    char tclname[SOCKNAME_SIZE];
-    sprintf(tclname, SOCKNAME_TEMPLATE, state->fd);
+    char tclname[SOCKNAME_LENGTH];
+    sprintf(tclname, SOCKNAME_TEMPLATE, (long) state);
 
     state->channel = Tcl_CreateChannel(
                         &unixsocketChannelType, tclname, state, 0);
@@ -280,18 +342,15 @@ unixsocketBlockModeProc(
     ClientData cdata,
     int        mode)
 {
-    fprintf(stderr, "block mdoe proc called\n");
-    unixsocket_state_t *state = (unixsocket_state_t*) cdata;
+    USOCKET_TRACE("block mdoe proc called\n");
+    UnixSocketState_T *state = (UnixSocketState_T*) cdata;
     int err;
 
     int flags = fcntl(state->fd, F_GETFL);
     if (mode == TCL_MODE_BLOCKING) {
         flags &= ~O_NONBLOCK;
     } else {
-        //fprintf(stderr, "UNIX SOCKET WARNING: async mode on unix socket is not\n");
-        //fprintf(stderr, "UNIX SOCKET WARNING: implemented in this code. \n");
         flags |= O_NONBLOCK;
-
     }
 
     if (fcntl(state->fd, F_SETFL, flags) < 0)
@@ -305,8 +364,9 @@ unixsocketWatchProc(
     ClientData cdata,
     int        mask)
 {
-    fprintf(stderr, "watch proc called %i\n", mask);
-    unixsocket_state_t *state = (unixsocket_state_t*)cdata;
+    USOCKET_TRACE("watch proc called %i\n", mask);
+    USOCKET_TRACE(" %i %i %i\n", TCL_READABLE, TCL_WRITABLE, TCL_EXCEPTION);
+    UnixSocketState_T *state = (UnixSocketState_T*)cdata;
 
     if (state->type == UNIXSOCK_SERVER)
         return;
@@ -343,14 +403,14 @@ unixsocketInputProc(
     int       *errorCodePtr)
 {
     int got;
-    unixsocket_state_t *state = (unixsocket_state_t*)cdata;
+    UnixSocketState_T *state = (UnixSocketState_T*)cdata;
 
     *errorCodePtr = 0;
     got = recv(state->fd, buf, (size_t) bufSize, 0);
     if (got == -1)
         *errorCodePtr = errno;
 
-    fprintf(stderr, "input proc called %i %i %s\n", state->fd, got, buf);
+    USOCKET_TRACE("input proc called %i %i %s\n", state->fd, got, buf);
     if (got == 0) {
         *errorCodePtr = ECONNRESET;
         return -1;
@@ -366,8 +426,8 @@ unixsocketOutputProc(
     int         toWrite,
     int *       errorCodePtr)
 {
-    fprintf(stderr, "output proc called\n");
-    unixsocket_state_t *state = (unixsocket_state_t*)cdata;
+    USOCKET_TRACE("output proc called\n");
+    UnixSocketState_T *state = (UnixSocketState_T*)cdata;
 
     int wrote;
     wrote = send(state->fd, buf, (size_t)toWrite, 0);
@@ -384,26 +444,26 @@ unixsocketCloseProc(
     ClientData  cdata,
     Tcl_Interp *interp)
 {
-    fprintf(stderr, "close proc called\n");
-    unixsocket_state_t *state = (unixsocket_state_t*) cdata;
+    USOCKET_TRACE("close proc called\n");
+    UnixSocketState_T *state = (UnixSocketState_T*) cdata;
     int errorCode = 0;
 
     if (state->type == UNIXSOCK_SERVER) {
 
-        unixsocket_state_t *child = state->next;
+        UnixSocketState_T *child = state->next;
         while (child) {
             Tcl_DeleteFileHandler(child->fd);
             if (close(child->fd) < 0)
                 errorCode = errno;
-            unixsocket_state_t *next = child->next;
+            UnixSocketState_T *next = child->next;
             ckfree(child);
             child = next;
         }
         Tcl_DeleteFileHandler(state->fd);
         if (close(state->fd) < 0)
             errorCode = errno;
-        unlink(state->srv_path);
-        ckfree(state->srv_path);
+        unlink(state->path);
+        ckfree(state->path);
         Tcl_DecrRefCount(state->srv_acceptfun);
         ckfree(state);
 
@@ -417,6 +477,9 @@ unixsocketCloseProc(
             state->prev->next = state->next;
         if (state->next)
             state->next->prev = state->prev;
+        if (state->path)
+            ckfree(state->path);
+
         ckfree(state);
 
     }
@@ -430,7 +493,7 @@ unixsocketGetHandleProc(
     int         direction,
     ClientData *handlePtr)
 {
-    unixsocket_state_t *state = (unixsocket_state_t*)cdata;
+    UnixSocketState_T *state = (UnixSocketState_T*)cdata;
 
     *handlePtr = (ClientData) (intptr_t) state->fd;
 

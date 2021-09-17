@@ -54,7 +54,12 @@ libtclunixsocket.so: tclunixsocket.c
 #
 .PHONY: clean
 clean:
-	$(RM) pkgIndex.tcl libtclunixsocket.so
+	$(RM) pkgIndex.tcl libtclunixsocket.so test.socket
+
+.PHONY: run
+run: CFLAGS += -DUSOCKET_TRACE_LOG
+run: pkgIndex.tcl
+	tclsh test_server.tcl
 
 #
 # install
