@@ -49,6 +49,7 @@ Where COMMAND can be:
              is down.
      help    Print this messag
 "
+    variable startup_config
     variable libdir
     variable userdir
     variable cfgfile
@@ -99,6 +100,8 @@ set ::flutio::sockfile [file join $::flutio::userdir flutio.socket]
 set ::flutio::plugdirs [list \
                             [file join $::flutio::libdir  plugins] \
                             [file join $::flutio::userdir plugins]]
+set ::flutio::startup_config \
+                       [file join $::flutio::userdir startup.config]
 
 ###########################################################################
 # Create user directory if absent
@@ -106,36 +109,6 @@ if {! [file exist $::flutio::userdir]} {
     file mkdir $::flutio::userdir
     file attribute $::flutio::userdir -permissions 0700
 }
-
-###########################################################################
-# Create initial config it does not exist
-set default_config "
-PLUGINS_DIRS=$::flutio::plugdirs
-DAEMON_MAX_CONNS=1
-DAEMON_PERSIST=0
-COLLECTION_ROOT=$env(HOME)
-COLLECTION_FOLLOW_SYMLINKS=1"
-
-if {! [file exist $::flutio::cfgfile]} {
-    set f [open $::flutio::cfgfile "w"]
-    puts $f $default_config
-    close $f
-}
-
-###########################################################################
-# Load config
-array set ::flutio::CFG {}
-set f [open $::flutio::cfgfile "r"]
-foreach line [split [read $f] "\n" ] {
-    set line [string trim $line]
-    if { ! [string match "#*" $line] } {
-        set opt [split $line "="]
-        set key [lindex $opt 0]
-        set val [lindex $opt 1]
-        set ::flutio::CFG($key) $val
-    }
-}
-close $f
 
 ###########################################################################
 # Here define all commands functions but the (stelth) "daemon" one.
@@ -233,6 +206,21 @@ switch [lindex $argv 0] {
 # defined here for lisibility
 proc ::flutio::main {} {
 
+    if {[file exists $::flutio::startup_config] != 1} {
+        puts stderr "file do not exist"
+        ::flutio::command "switch-context system"
+        ::flutio::command "write running.config startup.config"
+    } else {
+        puts stderr "file exist"
+        set fd [open "/home/seb/src/flutio/startup.config" "r"]
+        set data [read $fd]
+        close $fd
+        foreach line [split $data "\n"] {
+            ::flutio::command $line
+        }
+    }
+
+
     #######################################################################
     # Load all possible plugins
     foreach plugdir $::flutio::plugdirs {
@@ -253,6 +241,77 @@ proc ::flutio::main {} {
 
     ::flutio::playlist::play 0
     vwait _cataclysm_
+}
+
+namespace eval ::flutio::contexts {
+    variable root    {}
+    variable current_context {}
+    variable context_error 1
+
+    proc unregister {name} {
+        variable root
+        dict remove root {*}$name
+    }
+
+    proc register {name fun} {
+        variable root
+        dict set root {*}$name handler $fun
+    }
+
+    proc evaluate {cmd} {
+        variable current_context
+        variable context_error
+        variable root
+        if {[lindex $cmd 0] == "switch-context"} {
+
+            if {[llength $cmd] < 2} {
+                return "/[string join $current_context "/"]"
+            }
+
+            set cname_orig [lindex $cmd 1]
+            if {[string match "/*" $cname_orig]} {
+                # absolute
+                set cname [split $cname_orig "/"]
+
+            } else {
+                # relative
+                set cname [concat $current_context [split $cname_orig "/"]]
+            }
+
+            puts "$root"
+            puts "$current_context"
+            if {[catch {dict get $root {*}$current_context handler} handler]} {
+                set context_error 1
+                return "wront context name /[join $current_context "/"]"
+            }
+
+            return $cname
+        } else {
+            set handler [dict get $root {*}$current_context handler]
+            ${handler} $current_context $cmd
+        }
+    }
+}
+
+namespace eval ::flutio::configure {
+
+    proc eval {cmd} {
+        puts "configure!!!! $cmd"
+    }
+
+    ::flutio::contexts::register [list configure] ::flutio::configure
+
+}
+
+
+proc ::flutio::command {str} {
+    set str [string tolower [string trim $str]]
+    if {[string match "#*" $str] || [string length $str] == 0} {
+        return
+    }
+    set cmd [split $str]
+    ::flutio::contexts::evaluate $cmd
+
 }
 
 

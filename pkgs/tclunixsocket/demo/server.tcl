@@ -2,7 +2,7 @@
 # \
 exec tclsh "$0" ${1+"$@"}
 
-lappend auto_path [file dirname [info script]]
+lappend auto_path [file dirname [file dirname [info script]]]
 
 package require unixsocket 1.0
 

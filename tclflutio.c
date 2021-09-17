@@ -258,11 +258,8 @@ Tclflutio_Init(Tcl_Interp *interp)
 
     Tcl_CreateObjCommand(interp,
             "::flutio::c::plugins::load", tclflutio_loadplugin, NULL, NULL);
-
     Tcl_CreateObjCommand(interp,
             "::flutio::c::outputs::open", tclflutio_openoutput, NULL, NULL);
-
-
     Tcl_CreateObjCommand(interp,
             "::flutio::c::player::play", tclflutio_play, NULL, NULL);
     Tcl_CreateObjCommand(interp,
