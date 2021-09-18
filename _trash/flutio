@@ -33,7 +33,7 @@ exec tclsh "$0" ${1+"$@"}
 
 namespace eval flutio {
     variable usage \
-"Usage: [info script] \[/path/to/startup.config\] COMMAND
+"Usage: [info script] \[/path/to/startup.cfg\] COMMAND
 
 This command is used by flutio to start/connect a flutio processusing the
 startup config file located in \$HOME/.flutio/startup.cfg
@@ -50,11 +50,14 @@ Where COMMAND can be:
      help    Print this messag
 "
     variable startup_config
-    variable lib_dir
-    variable home_dir
-    variable pid_file
-    variable msg_log
-    variable err_log
+    variable libdir
+    variable userdir
+    variable cfgfile
+    variable pidfile
+    variable logfile
+    variable sockfile
+    variable plugdirs
+    variable CFG
 }
 
 ###########################################################################
@@ -87,21 +90,24 @@ if {$argc != 1 || [ lsearch \
 }
 
 ###########################################################################
-# Ok then, script variables for the default per user process. May be
-# overwriten by the startup.config
-set ::flutio::lib_dir     [file dirname $flutio_script]
-set ::flutio::home_dir    [file join $env(HOME) .flutio]
-set ::flutio::startup_cfg [file join $::flutio::home_dir startup.config]
-set ::flutio::pid_file    [file join $::flutio::home_dir running.pid]
-set ::flutio::msg_log     [file join $::flutio::home_dir messages.log]
-set ::flutio::err_log     [file join $::flutio::home_dir errors.log]
-set ::flutio::socket_path [file join $::flutio::home_dir flutio.socket]
+# Ok then, set some script variables
+set ::flutio::libdir   [file dirname $flutio_script]
+set ::flutio::userdir  [file join $env(HOME) .flutio]
+set ::flutio::cfgfile  [file join $::flutio::userdir flutio.config]
+set ::flutio::pidfile  [file join $::flutio::userdir flutio.pid]
+set ::flutio::logfile  [file join $::flutio::userdir flutio.log]
+set ::flutio::sockfile [file join $::flutio::userdir flutio.socket]
+set ::flutio::plugdirs [list \
+                            [file join $::flutio::libdir  plugins] \
+                            [file join $::flutio::userdir plugins]]
+set ::flutio::startup_config \
+                       [file join $::flutio::userdir startup.config]
 
 ###########################################################################
-# Create home directory if absent
-if {! [file exist $::flutio::home_dir]} {
-    file mkdir $::flutio::home_dir
-    file attribute $::flutio::home_dir -permissions 0700
+# Create user directory if absent
+if {! [file exist $::flutio::userdir]} {
+    file mkdir $::flutio::userdir
+    file attribute $::flutio::userdir -permissions 0700
 }
 
 ###########################################################################
@@ -118,8 +124,8 @@ namespace eval ::flutio {
     #######################################################################
     # flutio status
     proc status {} {
-        if [file exist $::flutio::pid_file] {
-            set f [open $::flutio::pid_file "r"]
+        if [file exist $::flutio::pidfile] {
+            set f [open $::flutio::pidfile "r"]
             set fpid [read $f]
             close $f
             puts "Flutio $fpid running"
@@ -144,7 +150,7 @@ namespace eval ::flutio {
     #######################################################################
     # flutio connect
     proc connect {} {
-        if { ! [file exist $::flutio::pid_file] } {
+        if { ! [file exist $::flutio::pidfile] } {
             set ret [exec [info script] start]
             if {$ret > 0} {
                 puts "Flutio connect: error starting flutio"
@@ -152,8 +158,8 @@ namespace eval ::flutio {
             }
         }
 
-        if { ! [file exist $::flutio::socket_path] } {
-            puts "Flutio connect: $::flutio::socket_path does not exists"
+        if { ! [file exist $::flutio::sockfile] } {
+            puts "Flutio connect: $::flutio::sockfile does not exists"
             return 1
         }
 
@@ -163,15 +169,15 @@ namespace eval ::flutio {
     #######################################################################
     # flutio kill
     proc kill {} {
-        if [file exist $::flutio::pid_file] {
-            set f [open $::flutio::pid_file "r"]
+        if [file exist $::flutio::pidfile] {
+            set f [open $::flutio::pidfile "r"]
             set fpid [read $f]
             close $f
             set ret [exec kill $fpid]
             if {$ret == 0} {
                 puts "Flutio process $fpid killed"
             }
-            file delete $::flutio::pid_file
+            file delete $::flutio::pidfile
             return $ret
         } else {
             puts "No flutio process running"
@@ -196,6 +202,9 @@ switch [lindex $argv 0] {
 # !!!         ONLY THE "flutio daemon" COMMAND GOES OVER THERE         !!!!
 ###########################################################################
 
+###########################################################################
+# The ::flutio::main function is called at the very end of the script, but
+# defined here for lisibility
 proc ::flutio::main {} {
 
     if {[file exists $::flutio::startup_config] != 1} {
