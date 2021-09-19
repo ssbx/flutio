@@ -33,7 +33,7 @@ exec tclsh "$0" ${1+"$@"}
 
 namespace eval mpdng {
     variable usage \
-"Usage: [info script] \[ -f system_config \] [COMMAND]
+"Usage: [info script] \[ -f system_config \] \[COMMAND\]
 
 This command is used by mpd-ng to start/connect a mpd-ng processusing the
 startup config file located in \$HOME/.mpd-ng/startup.cfg
@@ -57,8 +57,8 @@ When COMMAND is ommited, it is treated as it is start. It can be:
 # Catch missing libs
 set s [info script]
 while {[file type $s] == "link"} { set s [file link $s] }
-set ::mpd-ng::libdir [file dirname $s]
-lappend auto_path [file join $::mpd-ng::libdir pkgs]
+set ::mpdng::libdir [file dirname $s]
+lappend auto_path [file join $::mpdng::libdir pkgs]
 if [catch {
         package require Tcl         8.6
         package require unixsocket  1.0
