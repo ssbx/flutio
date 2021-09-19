@@ -38,32 +38,32 @@
 #include <tcl.h>
 
 /* tcl script api */
-static int tclflutio_loadplugin(ClientData,Tcl_Interp*,int,Tcl_Obj*const[]);
-static int tclflutio_close(ClientData,Tcl_Interp*,int,Tcl_Obj*const[]);
-static int tclflutio_play(ClientData,Tcl_Interp*,int,Tcl_Obj*const[]);
-static int tclflutio_stop(ClientData,Tcl_Interp*,int,Tcl_Obj*const[]);
-static int tclflutio_setnext(ClientData,Tcl_Interp*,int,Tcl_Obj*const[]);
-static int tclflutio_setpos(ClientData,Tcl_Interp*,int,Tcl_Obj*const[]);
+static int TclMpdNG_loadplugin(ClientData,Tcl_Interp*,int,Tcl_Obj*const[]);
+static int TclMpdNG_close(ClientData,Tcl_Interp*,int,Tcl_Obj*const[]);
+static int TclMpdNG_play(ClientData,Tcl_Interp*,int,Tcl_Obj*const[]);
+static int TclMpdNG_stop(ClientData,Tcl_Interp*,int,Tcl_Obj*const[]);
+static int TclMpdNG_setnext(ClientData,Tcl_Interp*,int,Tcl_Obj*const[]);
+static int TclMpdNG_setpos(ClientData,Tcl_Interp*,int,Tcl_Obj*const[]);
 
 /* Tcl custom event source and callbacks */
-#define TCLFPLAYER_EVENT_CHECK_TIME 100000
-static int         g_tclflutio_event_sigint   = 0;
-static Tcl_Obj    *g_tclflutio_event_callback = NULL;
-static Tcl_Interp *g_tclflutio_interp         = NULL;
-static void tclflutio_event_setup(ClientData,int);
-static void tclflutio_event_check(ClientData,int);
-static int  tclflutio_event_proc_exit(Tcl_Event*,int);
+#define TCLMPDNG_EVENT_CHECK_TIME 100000
+static int         g_TclMpdNG_event_sigint   = 0;
+static Tcl_Obj    *g_TclMpdNG_event_callback = NULL;
+static Tcl_Interp *g_TclMpdNG_interp         = NULL;
+static void TclMpdNG_event_setup(ClientData,int);
+static void TclMpdNG_event_check(ClientData,int);
+static int  TclMpdNG_event_proc_exit(Tcl_Event*,int);
 
 /* tcl package init stop */
-int         Tclflutio_Init(Tcl_Interp*);
-static void Tclflutio_Exit_Signal(int);
-static void Tclflutio_Exit(ClientData);
+int         Tclmpdng_Init(Tcl_Interp*);
+static void Tclmpdng_Exit_Signal(int);
+static void Tclmpdng_Exit(ClientData);
 
 /*************************************************************************
  * Tcl script api
  *************************************************************************/
 static int
-tclflutio_loadplugin(
+TclMpdNG_loadplugin(
     ClientData     cdata,
     Tcl_Interp    *interp,
     int            objc,
@@ -72,7 +72,7 @@ tclflutio_loadplugin(
     if (objc != 2) {
         Tcl_SetObjResult(interp,
             Tcl_NewStringObj(
-                "Wrong arg number: Flutio::plugin::load pluginPath", -1));
+                "Wrong arg number: mpdng::plugin::load pluginPath", -1));
         return TCL_ERROR;
     }
 
@@ -82,7 +82,7 @@ tclflutio_loadplugin(
 }
 
 static int
-tclflutio_openoutput(
+TclMpdNG_openoutput(
     ClientData     cdata,
     Tcl_Interp    *interp,
     int            objc,
@@ -91,7 +91,7 @@ tclflutio_openoutput(
     if (Outputs_Open()) {
         Tcl_SetObjResult(interp,
             Tcl_NewStringObj(
-                "Error: Flutio::outputs::open", -1));
+                "Error: mpdng::outputs::open", -1));
         return TCL_ERROR;
 
     }
@@ -99,7 +99,7 @@ tclflutio_openoutput(
 }
 
 static int
-tclflutio_close(
+TclMpdNG_close(
     ClientData     cdata,
     Tcl_Interp    *interp,
     int            objc,
@@ -109,7 +109,7 @@ tclflutio_close(
 }
 
 static int
-tclflutio_play(
+TclMpdNG_play(
     ClientData     cdata,
     Tcl_Interp    *interp,
     int            objc,
@@ -126,7 +126,7 @@ tclflutio_play(
 }
 
 static int
-tclflutio_stop(
+TclMpdNG_stop(
     ClientData     cdata,
     Tcl_Interp    *interp,
     int            objc,
@@ -136,7 +136,7 @@ tclflutio_stop(
 }
 
 static int
-tclflutio_setnext(
+TclMpdNG_setnext(
     ClientData     cdata,
     Tcl_Interp    *interp,
     int            objc,
@@ -146,7 +146,7 @@ tclflutio_setnext(
 }
 
 static int
-tclflutio_setpos(
+TclMpdNG_setpos(
     ClientData     cdata,
     Tcl_Interp    *interp,
     int            objc,
@@ -156,7 +156,7 @@ tclflutio_setpos(
 }
 
 static int
-tclflutio_setvol(
+TclMpdNG_setvol(
     ClientData     cdata,
     Tcl_Interp    *interp,
     int            objc,
@@ -166,7 +166,7 @@ tclflutio_setvol(
 }
 
 static int
-tclflutio_getplugins(
+TclMpdNG_getplugins(
     ClientData     cdata,
     Tcl_Interp    *interp,
     int            objc,
@@ -188,27 +188,27 @@ tclflutio_getplugins(
  * Tcl custom event source and callbacks
  **************************************************************************/
 static void
-tclflutio_event_setup(ClientData d, int flags)
+TclMpdNG_event_setup(ClientData d, int flags)
 {
-    Tcl_Time t = {0, TCLFPLAYER_EVENT_CHECK_TIME};
-    if (g_tclflutio_event_sigint)
+    Tcl_Time t = {0, TCLMPDNG_EVENT_CHECK_TIME};
+    if (g_TclMpdNG_event_sigint)
         t.usec = 0;
 
     Tcl_SetMaxBlockTime(&t);
 }
 
 static void
-tclflutio_event_check(ClientData d, int flags)
+TclMpdNG_event_check(ClientData d, int flags)
 {
-    if (g_tclflutio_event_sigint) {
+    if (g_TclMpdNG_event_sigint) {
         Tcl_Event *e = (Tcl_Event*) ckalloc(sizeof(Tcl_Event));
-        e->proc = tclflutio_event_proc_exit;
+        e->proc = TclMpdNG_event_proc_exit;
         Tcl_QueueEvent(e, TCL_QUEUE_TAIL);
     }
 }
 
 static int
-tclflutio_event_proc_exit(Tcl_Event *e, int flags)
+TclMpdNG_event_proc_exit(Tcl_Event *e, int flags)
 {
     Tcl_Exit(0);
     return 1;
@@ -218,13 +218,13 @@ tclflutio_event_proc_exit(Tcl_Event *e, int flags)
  * Tcl C extensions init and close
  *************************************************************************/
 static void
-Tclflutio_Exit_Signal(int d)
+Tclmpdng_Exit_Signal(int d)
 {
-    g_tclflutio_event_sigint = 1;
+    g_TclMpdNG_event_sigint = 1;
 }
 
 static void
-Tclflutio_Exit(ClientData d)
+Tclmpdng_Exit(ClientData d)
 {
     Player_Clear();
     Outputs_Close();
@@ -232,44 +232,44 @@ Tclflutio_Exit(ClientData d)
 }
 
 int
-Tclflutio_Init(Tcl_Interp *interp)
+Tclmpdng_Init(Tcl_Interp *interp)
 {
     if (Tcl_InitStubs(interp, TCL_VERSION, 0) == NULL) {
         Tcl_SetObjResult(interp,
-            Tcl_NewStringObj("fplayer error at Tcl_Initstubs", -1));
+            Tcl_NewStringObj("mpdng error at Tcl_Initstubs", -1));
         return TCL_ERROR;
     }
 
     Tcl_Namespace *nsPtr;
     if ((nsPtr =
-      Tcl_CreateNamespace(interp, "::flutio::c", NULL, NULL)) == NULL) {
+      Tcl_CreateNamespace(interp, "::mpdng::c", NULL, NULL)) == NULL) {
         Tcl_SetObjResult(interp,
-            Tcl_NewStringObj("fplayer error at Tcl_CreateNamespace", -1));
+            Tcl_NewStringObj("mpdng error at Tcl_CreateNamespace", -1));
         return TCL_ERROR;
     }
 
-    signal(SIGINT,  Tclflutio_Exit_Signal);
-    signal(SIGTERM, Tclflutio_Exit_Signal);
-    signal(SIGKILL, Tclflutio_Exit_Signal);
+    signal(SIGINT,  Tclmpdng_Exit_Signal);
+    signal(SIGTERM, Tclmpdng_Exit_Signal);
+    signal(SIGKILL, Tclmpdng_Exit_Signal);
 
-    Tcl_CreateExitHandler(Tclflutio_Exit, NULL);
+    Tcl_CreateExitHandler(Tclmpdng_Exit, NULL);
     Tcl_CreateEventSource(
-        tclflutio_event_setup, tclflutio_event_check, NULL);
+        TclMpdNG_event_setup, TclMpdNG_event_check, NULL);
 
     Tcl_CreateObjCommand(interp,
-            "::flutio::c::plugins::load", tclflutio_loadplugin, NULL, NULL);
+            "::mpdng::c::plugins::load", TclMpdNG_loadplugin, NULL, NULL);
     Tcl_CreateObjCommand(interp,
-            "::flutio::c::outputs::open", tclflutio_openoutput, NULL, NULL);
+            "::mpdng::c::outputs::open", TclMpdNG_openoutput, NULL, NULL);
     Tcl_CreateObjCommand(interp,
-            "::flutio::c::player::play", tclflutio_play, NULL, NULL);
+            "::mpdng::c::player::play", TclMpdNG_play, NULL, NULL);
     Tcl_CreateObjCommand(interp,
-            "::flutio::c::player::setnext", tclflutio_setnext, NULL, NULL);
+            "::mpdng::c::player::setnext", TclMpdNG_setnext, NULL, NULL);
     Tcl_CreateObjCommand(interp,
-            "::flutio::c::player::setpos", tclflutio_setpos, NULL, NULL);
+            "::mpdng::c::player::setpos", TclMpdNG_setpos, NULL, NULL);
     Tcl_CreateObjCommand(interp,
-            "::flutio::c::player::stop", tclflutio_stop, NULL, NULL);
+            "::mpdng::c::player::stop", TclMpdNG_stop, NULL, NULL);
 
-    g_tclflutio_interp = interp;
+    g_TclMpdNG_interp = interp;
 
     Player_Init();
 

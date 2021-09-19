@@ -30,8 +30,8 @@
 
 #ifndef OUTPUTS_H
 #define OUTPUTS_H
-#define FLUTIO_MAIN_BUILD
-#include <flutio/plugins/output.h>
+#define MPDNG_MAIN_BUILD
+#include <mpd-ng/plugins/output.h>
 
 typedef struct _OutputPlugin_T OutputPlugin_T;
 typedef struct _OutputPlugin_T {

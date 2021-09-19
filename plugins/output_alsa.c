@@ -28,7 +28,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <flutio/plugins/output.h>
+#include <mpd-ng/plugins/output.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
@@ -56,7 +56,7 @@ void Alsa_Close();
 int  Alsa_GetRate();
 int  Alsa_GetChannels();
 
-void Flutio_OutputPluginInfo(OutputPluginInfo_T* info)
+void MpdNG_OutputPluginInfo(OutputPluginInfo_T* info)
 {
     info->name = PLUGIN_NAME;
     info->revision = PLUGIN_REVISION;

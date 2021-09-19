@@ -53,17 +53,17 @@ Plugins_Load(char* path)
 
     /* get the type function */
     int (*plugin_type)();
-    plugin_type = dlsym(handle, "Flutio_PluginType");
+    plugin_type = dlsym(handle, "MpdNG_PluginType");
     if ((error = dlerror()) != NULL) {
         dlclose(handle);
         fprintf(stderr,
-                    "Could not find Flutio_PluginType function: %s\n", error);
+                    "Could not find MpdNG_PluginType function: %s\n", error);
         return 1;
     }
 
     switch (plugin_type()) {
-        case FLUTIO_PLUGIN_TYPE_INPUT:  return Inputs_Load(path, handle);
-        case FLUTIO_PLUGIN_TYPE_OUTPUT: return Outputs_Load(path, handle);
+        case MPDNG_PLUGIN_TYPE_INPUT:  return Inputs_Load(path, handle);
+        case MPDNG_PLUGIN_TYPE_OUTPUT: return Outputs_Load(path, handle);
         default: {
             fprintf(stderr,"Unkown plugin type %i for %s\n", plugin_type(), path);
             dlclose(handle);

@@ -27,18 +27,47 @@
  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef FLUTIO_FRAMEGEN_IF_H
-#define FLUTIO_FRAMEGEN_IF_H
 
-/*
- * Frame generator interface
- */
-typedef struct _FrameGen_I {
-    float* (*read)            (PluginData_T,int,int*);
-    int    (*getRate)         (PluginData_T);
-    int    (*getFrameCount)   (PluginData_T);
-    int    (*getChannelCount) (PluginData_T);
-    int    (*seek)            (PluginData_T,int,int);
-} FrameGen_I;
+#ifndef MPDNG_PLUGINS_COMMON_H
+#define MPDNG_PLUGINS_COMMON_H
 
-#endif // FLUTIO_FRAMEGEN_IF_H
+typedef enum {
+    MPDNG_PLUGIN_TYPE_INPUT      = 0,
+    MPDNG_PLUGIN_TYPE_POST_INPUT = 1,
+    MPDNG_PLUGIN_TYPE_PRE_OUTPUT = 2,
+    MPDNG_PLUGIN_TYPE_OUTPUT     = 3,
+    MPDNG_PLUGIN_TYPE_MSG_FORMAT = 4,
+    MPDNG_PLUGIN_TYPE_FADE_EFFECT= 5
+} PluginType_T;
+
+typedef void* PluginData_T;
+
+typedef enum {INT_OPTION, FLOAT_OPTION, STRING_OPTION} PluginOptionType_T;
+typedef union {
+    int   intVal;
+    float floatVal;
+    char *stringVal;
+} PluginOptionValue_T;
+
+typedef struct {
+    char* name;
+    PluginOptionType_T  type;
+    PluginOptionValue_T value;
+} PluginOption_T;
+
+typedef struct {
+} MpdNGApi_T;
+
+#ifndef MPDNG_MAIN_BUILD // only for plugin include
+
+    static MpdNGApi_T* g_api;
+
+    void MpdNG_ApiSet(MpdNGApi_T *api) {
+        g_api = api;
+    }
+
+#endif // MPDNG_MAIN_BUILD
+
+#endif // MPDNG_PLUGINS_COMMON_H
+
+

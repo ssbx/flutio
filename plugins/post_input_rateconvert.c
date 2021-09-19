@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <unistd.h>
-#include <flutio/plugins/post_input.h>
+#include <mpd-ng/plugins/post_input.h>
 
 static char name[]   = "rate-convert";
 static int  revision = 1;
@@ -10,7 +10,7 @@ FrameGen_I*  RateConvert_getFrameGen(PluginData_T);
 PluginData_T RateConvert_init(FrameGen_T*);
 
 void
-Flutio_PostInputPluginInfo(PostInputPluginInfo_T *info)
+MpdNG_PostInputPluginInfo(PostInputPluginInfo_T *info)
 {
     info->name        = name;
     info->priority    = initial_priority;

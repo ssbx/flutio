@@ -1,16 +1,20 @@
-fade_fx.o: fade_fx.c
-inputs.o: inputs.c inputs.h include/flutio/plugins/input.h \
- include/flutio/plugins/common.h
-outputs.o: outputs.c outputs.h include/flutio/plugins/output.h \
- include/flutio/plugins/common.h player.h
+fade.o: fade.c
+inputs.o: inputs.c inputs.h include/mpd-ng/plugins/input.h \
+ include/mpd-ng/plugins/common.h \
+ include/mpd-ng/interfaces/frame_generator.h
+outputs.o: outputs.c outputs.h include/mpd-ng/plugins/output.h \
+ include/mpd-ng/plugins/common.h player.h
 player.o: player.c player.h track.h inputs.h \
- include/flutio/plugins/input.h include/flutio/plugins/common.h
-plugins.o: plugins.c inputs.h include/flutio/plugins/input.h \
- include/flutio/plugins/common.h outputs.h \
- include/flutio/plugins/output.h
+ include/mpd-ng/plugins/input.h include/mpd-ng/plugins/common.h \
+ include/mpd-ng/interfaces/frame_generator.h
+plugins.o: plugins.c inputs.h include/mpd-ng/plugins/input.h \
+ include/mpd-ng/plugins/common.h \
+ include/mpd-ng/interfaces/frame_generator.h outputs.h \
+ include/mpd-ng/plugins/output.h
 post_inputs.o: post_inputs.c
 pre_outputs.o: pre_outputs.c
-tclflutio.o: tclflutio.c plugins.h outputs.h \
- include/flutio/plugins/output.h include/flutio/plugins/common.h player.h
-track.o: track.c track.h inputs.h include/flutio/plugins/input.h \
- include/flutio/plugins/common.h
+tclmpdng.o: tclmpdng.c plugins.h outputs.h \
+ include/mpd-ng/plugins/output.h include/mpd-ng/plugins/common.h player.h
+track.o: track.c track.h inputs.h include/mpd-ng/plugins/input.h \
+ include/mpd-ng/plugins/common.h \
+ include/mpd-ng/interfaces/frame_generator.h

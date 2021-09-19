@@ -31,7 +31,7 @@ export MAKE    = make
 export INSTALL = install
 export LN      = ln
 
-FLUTIOLIB  = libtclflutio.so
+LIBMPDNG  = libtclmpdng.so
 
 CFLAGS  = -fPIC -DUSE_TCL_STUBS -I/usr/include/tcl8.6 -Iinclude
 LDFLAGS = -L/usr/lib -ltclstub8.6
@@ -40,18 +40,18 @@ LDFLAGS = -L/usr/lib -ltclstub8.6
 # Default target
 #
 .PHONY: all
-all: $(FLUTIOLIB)
+all: $(LIBMPDNG)
 	$(MAKE) -C plugins
 	$(MAKE) -C pkgs
 
 #
-# libtclflutio.so
+# libtclmpdng.so
 #
-FLUTIO_OBJECTS = tclflutio.o player.o plugins.o track.o inputs.o \
-                 outputs.o pre_outputs.o post_inputs.o fade_fx.o
-FLUTIO_LDFLAGS = $(LDFLAGS) -lpthread
-$(FLUTIOLIB): $(FLUTIO_OBJECTS)
-	$(CC) -shared -o $(FLUTIOLIB) $(FLUTIO_OBJECTS) $(FLUTIO_LDFLAGS)
+MPDNG_OBJECTS = tclmpdng.o player.o plugins.o track.o inputs.o \
+                 outputs.o pre_outputs.o post_inputs.o fade.o
+MPDNG_LDFLAGS = $(LDFLAGS) -lpthread
+$(LIBMPDNG): $(MPDNG_OBJECTS)
+	$(CC) -shared -o $(LIBMPDNG) $(MPDNG_OBJECTS) $(MPDNG_LDFLAGS)
 
 
 #
@@ -59,7 +59,7 @@ $(FLUTIOLIB): $(FLUTIO_OBJECTS)
 #
 .PHONY: clean
 clean:
-	$(RM) $(FLUTIO_OBJECTS) $(FLUTIOLIB)
+	$(RM) $(MPDNG_OBJECTS) $(LIBMPDNG)
 	$(MAKE) -C plugins clean
 	$(MAKE) -C pkgs clean
 
@@ -75,27 +75,27 @@ update:
 # install
 #
 .PHONY: install
-prefix 			 = $(HOME)
-bindir 			 = $(prefix)/bin
-mandir 			 = $(prefix)/man
-incdir 			 = $(prefix)/include
-libexecdir 		 = $(prefix)/libexec
-flutio_inst_dir  = $(libexecdir)/flutio
-flutio_inc_dir   = $(incdir)/flutio
-export tclpkgdir = $(flutio_inst_dir)/pkgs
+prefix         = $(HOME)
+bindir         = $(prefix)/bin
+mandir         = $(prefix)/man
+incdir         = $(prefix)/include
+libexecdir     = $(prefix)/libexec
+mpdng_inst_dir = $(libexecdir)/mpd-ng
+mpdng_inc_dir  = $(incdir)/mpd-ng
+export tclpkgdir = $(mpdng_inst_dir)/pkgs
 install: all
 	$(INSTALL) -d -m 755 '$(DESTDIR)$(bindir)'
 	$(INSTALL) -d -m 755 '$(DESTDIR)$(mandir)'
-	$(INSTALL) -d -m 755 '$(DESTDIR)$(flutio_inc_dir)/plugins'
-	$(INSTALL) -d -m 755 '$(DESTDIR)$(flutio_inc_dir)/interfaces'
-	$(INSTALL) -d -m 755 '$(DESTDIR)$(flutio_inst_dir)'
-	$(INSTALL) -d -m 755 '$(DESTDIR)$(flutio_inst_dir)/plugins'
-	$(INSTALL) -d -m 755 '$(DESTDIR)$(flutio_inst_dir)/pkgs'
-	$(INSTALL) -m 444 libtclflutio.so '$(DESTDIR)$(flutio_inst_dir)'
-	$(INSTALL) -m 444 plugins/*.so '$(DESTDIR)$(flutio_inst_dir)/plugins'
-	$(INSTALL) -m 444 include/flutio/plugins/*.h '$(DESTDIR)$(flutio_inc_dir)/plugins'
-	$(INSTALL) -m 444 include/flutio/interfaces/*.h '$(DESTDIR)$(flutio_inc_dir)/plugins'
-	$(INSTALL) -m 555 flutio '$(DESTDIR)$(flutio_inst_dir)'
-	$(LN) -fs '$(flutio_inst_dir)/flutio' '$(DESTDIR)$(bindir)'
+	$(INSTALL) -d -m 755 '$(DESTDIR)$(mpdng_inc_dir)/plugins'
+	$(INSTALL) -d -m 755 '$(DESTDIR)$(mpdng_inc_dir)/interfaces'
+	$(INSTALL) -d -m 755 '$(DESTDIR)$(mpdng_inst_dir)'
+	$(INSTALL) -d -m 755 '$(DESTDIR)$(mpdng_inst_dir)/plugins'
+	$(INSTALL) -d -m 755 '$(DESTDIR)$(mpdng_inst_dir)/pkgs'
+	$(INSTALL) -m 444 $(LIBMPDNG) '$(DESTDIR)$(mpdng_inst_dir)'
+	$(INSTALL) -m 444 plugins/*.so '$(DESTDIR)$(mpdng_inst_dir)/plugins'
+	$(INSTALL) -m 444 include/mpd-ng/plugins/*.h '$(DESTDIR)$(mpdng_inc_dir)/plugins'
+	$(INSTALL) -m 444 include/mpd-ng/interfaces/*.h '$(DESTDIR)$(mpdng_inc_dir)/plugins'
+	$(INSTALL) -m 555 mpd-ng '$(DESTDIR)$(mpdng_inst_dir)'
+	$(LN) -fs '$(mpdng_inst_dir)/mpd-ng' '$(DESTDIR)$(bindir)'
 	make -C pkgs install
 
