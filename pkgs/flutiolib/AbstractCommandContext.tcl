@@ -19,4 +19,8 @@ oo::class create ::flutio::AbstractCommandContext {
         return -code error \
             "method '[info object class [self]]' interpret is abstract"
     }
+
+    method tabtab {str} {
+        return ""
+    }
 }

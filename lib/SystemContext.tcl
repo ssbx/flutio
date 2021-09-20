@@ -8,36 +8,12 @@ oo::class create ::flutio::SystemContext {
         my variable pid_file
         my variable log_file
         global env
-        set flutio_home [file join $env(HOME) .flutio]
-        set startup_config [file join $flutio_home startup.config]
-        set socket_path    [file join $flutio_home flutio.socket]
-        set log_file       [file join $flutio_home messages.log]
-        set pid_file       [file join $flutio_home flutio.pid]
+        set uhome [file join $env(HOME) .flutio]
+        set startup_config [file join $uhome startup.config]
+        set socket_path    [file join $uhome flutio.socket]
+        set log_file       [file join $uhome messages.log]
+        set pid_file       [file join $uhome flutio.pid]
         set commands {hello world}
-    }
-
-    method startup_config {} {my variable startup_config; return $startup_config;}
-    method socket_path {} {my variable socket_path; return $socket_path;}
-    method log_file {} {my variable log_file; return $log_file;}
-    method pid_file {} {my variable pid_file; return $pid_file;}
-
-    method isvalid? {} {
-        my variable startup_config
-        my variable socket_path
-        my variable pid_file
-        my variable log_file
-
-        foreach f [list $startup_config $socket_path $pid_file $log_file] {
-            set d [file dirname $f]
-            if {![file exists $d]} {
-                file mkdir [file dirname $d]
-            }
-            if {![file writable $d]} {
-                puts stderr "Sysconfig error: $d is not writeable"
-                return 0;
-            }
-        }
-        return 1
     }
 
     method dump {} {
@@ -58,7 +34,35 @@ oo::class create ::flutio::SystemContext {
         return [join $data "\n"]
     }
 
+    method tabtab {str} {
+        return ""
+    }
+
     method interpret {line} {
-        puts "lkjlk"
+        return "ok"
+    }
+
+    method set_startup_config {v} {my variable startup_config; set startup_config $v;}
+    method set_socket_path {v} {my variable socket_path; set socket_path $v;}
+    method set_log_file {v} {my variable log_file; set log_file $v;}
+    method set_pid_file {v} {my variable pid_file; set pid_file $v;}
+
+    method isvalid? {} {
+        my variable startup_config
+        my variable socket_path
+        my variable pid_file
+        my variable log_file
+
+        foreach f [list $startup_config $socket_path $pid_file $log_file] {
+            set d [file dirname $f]
+            if {![file exists $d]} {
+                file mkdir [file dirname $d]
+            }
+            if {![file writable $d]} {
+                puts stderr "Sysconfig error: $d is not writeable"
+                return 0;
+            }
+        }
+        return 1
     }
 }
