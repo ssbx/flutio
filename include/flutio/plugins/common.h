@@ -28,53 +28,46 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "inputs.h"
-#include "outputs.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <dlfcn.h>
+#ifndef FLUTIO_PLUGINS_COMMON_H
+#define FLUTIO_PLUGINS_COMMON_H
 
-int
-Plugins_Load(char* path)
-{
-    char *error;
-    void *handle;
+typedef enum {
+    FLUTIO_PLUGIN_TYPE_INPUT      = 0,
+    FLUTIO_PLUGIN_TYPE_POST_INPUT = 1,
+    FLUTIO_PLUGIN_TYPE_PRE_OUTPUT = 2,
+    FLUTIO_PLUGIN_TYPE_OUTPUT     = 3,
+    FLUTIO_PLUGIN_TYPE_MSG_FORMAT = 4,
+    FLUTIO_PLUGIN_TYPE_FADE_EFFECT= 5
+} PluginType_T;
 
-    /* open the object */
-    if ((handle = dlopen(path, RTLD_LAZY)) == NULL) {
-        fprintf(stderr,
-                    "Could not open plugin: %s\n", dlerror());
-        return 1;
+typedef void* PluginData_T;
+
+typedef enum {INT_OPTION, FLOAT_OPTION, STRING_OPTION} PluginOptionType_T;
+typedef union {
+    int   intVal;
+    float floatVal;
+    char *stringVal;
+} PluginOptionValue_T;
+
+typedef struct {
+    char* name;
+    PluginOptionType_T  type;
+    PluginOptionValue_T value;
+} PluginOption_T;
+
+typedef struct {
+} FlutioApi_T;
+
+#ifndef FLUTIO_MAIN_BUILD // only for plugin include
+
+    static FlutioApi_T* g_api;
+
+    void Flutio_ApiSet(FlutioApi_T *api) {
+        g_api = api;
     }
 
-    /* clear any existing error */
-    dlerror();
+#endif // FLUTIO_MAIN_BUILD
 
-    /* get the type function */
-    int (*plugin_type)();
-    plugin_type = dlsym(handle, "Flutio_PluginType");
-    if ((error = dlerror()) != NULL) {
-        dlclose(handle);
-        fprintf(stderr,
-                    "Could not find Flutio_PluginType function: %s\n", error);
-        return 1;
-    }
+#endif // FLUTIO_PLUGINS_COMMON_H
 
-    switch (plugin_type()) {
-        case FLUTIO_PLUGIN_TYPE_INPUT:  return Inputs_Load(path, handle);
-        case FLUTIO_PLUGIN_TYPE_OUTPUT: return Outputs_Load(path, handle);
-        default: {
-            fprintf(stderr,"Unkown plugin type %i for %s\n", plugin_type(), path);
-            dlclose(handle);
-            return 1;
-        }
-    }
-}
 
-void
-Plugins_ReleaseAll()
-{
-    Inputs_Release();
-    Outputs_Release();
-}

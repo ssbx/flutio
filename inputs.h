@@ -30,8 +30,8 @@
 
 #ifndef INPUTS_H
 #define INPUTS_H
-#define MPDNG_MAIN_BUILD
-#include <mpd-ng/plugins/input.h>
+#define FLUTIO_MAIN_BUILD
+#include <flutio/plugins/input.h>
 
 typedef struct _InputPlugin_T InputPlugin_T;
 typedef struct _InputPlugin_T {

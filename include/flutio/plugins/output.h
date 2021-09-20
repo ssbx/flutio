@@ -28,46 +28,71 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MPDNG_POST_INPUT_PLUGIN_H
-#define MPDNG_POST_INPUT_PLUGIN_H
-#include <mpd-ng/plugins/common.h>
-#include <mpd-ng/interfaces/frame_generator.h>
+#ifndef OUTPUT_PLUGIN_H
+#define OUTPUT_PLUGIN_H
+#include <flutio/plugins/common.h>
 
-#ifndef MPDNG_MAIN_BUILD // only for plugin include
-    PluginType_T MpdNG_PluginType() {
-        return MPDNG_PLUGIN_TYPE_POST_INPUT;
+#define FLUTIO_OUTPUT_API_GETFRAMES 0
+
+#ifndef FLUTIO_MAIN_BUILD // only for plugin include
+    PluginType_T Flutio_PluginType() { return FLUTIO_PLUGIN_TYPE_OUTPUT; }
+
+    /*
+     * Functions available to the plugin
+     */
+    float* (*Player_GetFrames)(int,int*);
+    void Flutio_OutputPlugin_Api(int index, void* fun) {
+        switch (index) {
+            case FLUTIO_OUTPUT_API_GETFRAMES: {
+                Player_GetFrames = (float* (*)(int, int*)) fun;
+            }
+        }
     }
-#endif // MPDNG_MAIN_BUILD
+
+#endif // FLUTIO_MAIN_BUILD
 
 /*
- * To write a plugin for MpdNG:
+ * To write an output plugin for flutio:
  *  - include this file
- *  - write a "input_info" function in your plugin
- *  - put your plugin in either $(libdir)/mpd-ng/plugins or
- *  $HOME/.mpd-ng/plugins
+ *  - write a non static "Flutio_output_info" function in your plugin
+ *  - put your plugin in either $(libdir)/flutio/plugins or
+ *  $HOME/.flutio/plugins
  *
- *  See the documentation of "input_info" at the end of this
+ *  See the documentation of "Flutio_output_info" at the end of this
  *  file.
  */
 
+typedef struct {
+    int wanted_rate;
+    int wanted_channels;
+} OutputParams_T;
+
 /*
- * PostInput plugin interface
+ * Output plugin callbacks
  */
 typedef struct {
     char *name;
     int	revision;
-    int priority;
-    FrameGen_I*  getFrameGen(PluginData_T);
-    PluginData_T init(FrameGen_I*);
-} PostInputPluginInfo_T;
+    int (*Open)(OutputParams_T*);
+    void (*Close)();
+    int (*GetRate)();
+    int (*GetChannels)();
+    char* (*GetFormFromConfig)();
+    int (*SetConfigFromForm)(char*);
+} OutputPluginInfo_T;
 
 /*
+ * void Flutio_OutputInfo(Flutio_OutputInfo_T *info);
  * This is the unique function that must be implemented on the
  * plugin side. Must return the type of plugin, and the relevant
  * union (input or output) filled with relevant data.
- * input_info_t is self explanatory, see default mpd-ng plugins
- * source for examples.
+ * Flutio_output_plugin_info_t and Flutio_input_plugin_info_t are
+ * self explanatory, see default flutio plugins source for
+ * examples.
+ *
+ * The Flutio_api_t struct contains flutio function available to
+ * plugins.
  */
-void MpdNG_PostInputPluginInfo(PostInputPluginInfo_T*);
+ void Flutio_OutputPluginInfo(OutputPluginInfo_T*);
 
-#endif // MPDNG_POST_INPUT_PLUGIN_H
+#endif // OUTPUT_PLUGIN_H

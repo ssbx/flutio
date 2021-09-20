@@ -1,16 +1,16 @@
-input_libsndfile.o: input_libsndfile.c ../include/mpd-ng/plugins/input.h \
- ../include/mpd-ng/plugins/common.h \
- ../include/mpd-ng/interfaces/frame_generator.h
-output_alsa.o: output_alsa.c ../include/mpd-ng/plugins/output.h \
- ../include/mpd-ng/plugins/common.h
+input_libsndfile.o: input_libsndfile.c ../include/flutio/plugins/input.h \
+ ../include/flutio/plugins/common.h \
+ ../include/flutio/interfaces/frame_generator.h
+output_alsa.o: output_alsa.c ../include/flutio/plugins/output.h \
+ ../include/flutio/plugins/common.h
 post_input_channelconvert.o: post_input_channelconvert.c \
- ../include/mpd-ng/plugins/post_input.h \
- ../include/mpd-ng/plugins/common.h \
- ../include/mpd-ng/interfaces/frame_generator.h
+ ../include/flutio/plugins/post_input.h \
+ ../include/flutio/plugins/common.h \
+ ../include/flutio/interfaces/frame_generator.h
 post_input_rateconvert.o: post_input_rateconvert.c \
- ../include/mpd-ng/plugins/post_input.h \
- ../include/mpd-ng/plugins/common.h \
- ../include/mpd-ng/interfaces/frame_generator.h
+ ../include/flutio/plugins/post_input.h \
+ ../include/flutio/plugins/common.h \
+ ../include/flutio/interfaces/frame_generator.h
 post_input_splitmerge.o: post_input_splitmerge.c
 pre_output_softvolume.o: pre_output_softvolume.c
 pre_output_splitmerge.o: pre_output_splitmerge.c

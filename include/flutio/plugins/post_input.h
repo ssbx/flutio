@@ -27,18 +27,47 @@
  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef MPDNG_FRAMEGEN_IF_H
-#define MPDNG_FRAMEGEN_IF_H
+
+#ifndef FLUTIO_POST_INPUT_PLUGIN_H
+#define FLUTIO_POST_INPUT_PLUGIN_H
+#include <flutio/plugins/common.h>
+#include <flutio/interfaces/frame_generator.h>
+
+#ifndef FLUTIO_MAIN_BUILD // only for plugin include
+    PluginType_T Flutio_PluginType() {
+        return FLUTIO_PLUGIN_TYPE_POST_INPUT;
+    }
+#endif // FLUTIO_MAIN_BUILD
 
 /*
- * Frame generator interface
+ * To write a plugin for Flutio:
+ *  - include this file
+ *  - write a "input_info" function in your plugin
+ *  - put your plugin in either $(libdir)/flutio/plugins or
+ *  $HOME/.flutio/plugins
+ *
+ *  See the documentation of "input_info" at the end of this
+ *  file.
  */
-typedef struct _FrameGen_I {
-    float* (*read)            (PluginData_T,int,int*);
-    int    (*getRate)         (PluginData_T);
-    int    (*getFrameCount)   (PluginData_T);
-    int    (*getChannelCount) (PluginData_T);
-    int    (*seek)            (PluginData_T,int,int);
-} FrameGen_I;
 
-#endif // MPDNG_FRAMEGEN_IF_H
+/*
+ * PostInput plugin interface
+ */
+typedef struct {
+    char *name;
+    int	revision;
+    int priority;
+    FrameGen_I*  getFrameGen(PluginData_T);
+    PluginData_T init(FrameGen_I*);
+} PostInputPluginInfo_T;
+
+/*
+ * This is the unique function that must be implemented on the
+ * plugin side. Must return the type of plugin, and the relevant
+ * union (input or output) filled with relevant data.
+ * input_info_t is self explanatory, see default flutio plugins
+ * source for examples.
+ */
+void Flutio_PostInputPluginInfo(PostInputPluginInfo_T*);
+
+#endif // FLUTIO_POST_INPUT_PLUGIN_H

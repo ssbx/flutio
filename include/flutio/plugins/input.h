@@ -28,46 +28,48 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MPDNG_PLUGINS_COMMON_H
-#define MPDNG_PLUGINS_COMMON_H
+#ifndef FLUTIO_INPUT_PLUGIN_H
+#define FLUTIO_INPUT_PLUGIN_H
+#include <flutio/plugins/common.h>
+#include <flutio/interfaces/frame_generator.h>
 
-typedef enum {
-    MPDNG_PLUGIN_TYPE_INPUT      = 0,
-    MPDNG_PLUGIN_TYPE_POST_INPUT = 1,
-    MPDNG_PLUGIN_TYPE_PRE_OUTPUT = 2,
-    MPDNG_PLUGIN_TYPE_OUTPUT     = 3,
-    MPDNG_PLUGIN_TYPE_MSG_FORMAT = 4,
-    MPDNG_PLUGIN_TYPE_FADE_EFFECT= 5
-} PluginType_T;
+#ifndef FLUTIO_MAIN_BUILD
+    PluginType_T Flutio_PluginType() { return FLUTIO_PLUGIN_TYPE_INPUT; }
+#endif
 
-typedef void* PluginData_T;
+/*
+ * To write a plugin for Flutio:
+ *  - include this file
+ *  - write a "input_info" function in your plugin
+ *  - put your plugin in either $(libdir)/flutio/plugins or
+ *  $HOME/.flutio/plugins
+ *
+ *  See the documentation of "input_info" at the end of this
+ *  file.
+ */
 
-typedef enum {INT_OPTION, FLOAT_OPTION, STRING_OPTION} PluginOptionType_T;
-typedef union {
-    int   intVal;
-    float floatVal;
-    char *stringVal;
-} PluginOptionValue_T;
-
+/*
+ * Input plugin interface
+ */
 typedef struct {
-    char* name;
-    PluginOptionType_T  type;
-    PluginOptionValue_T value;
-} PluginOption_T;
+    char          *name;
+    int	           revision;
+    FrameGen_I     frameGen;
+    int          (*concerned) (char*);
+    char**       (*listOptions)();
+    char*        (*getOption) (char*);
+    int          (*setOption) (char*,char*);
+    PluginData_T (*open)      (char*);
+    void         (*close)     (PluginData_T);
+} InputPluginInfo_T;
 
-typedef struct {
-} MpdNGApi_T;
+/*
+ * This is the unique function that must be implemented on the
+ * plugin side. Must return the type of plugin, and the relevant
+ * union (input or output) filled with relevant data.
+ * input_info_t is self explanatory, see default flutio plugins
+ * source for examples.
+ */
+void Flutio_InputPluginInfo(InputPluginInfo_T*);
 
-#ifndef MPDNG_MAIN_BUILD // only for plugin include
-
-    static MpdNGApi_T* g_api;
-
-    void MpdNG_ApiSet(MpdNGApi_T *api) {
-        g_api = api;
-    }
-
-#endif // MPDNG_MAIN_BUILD
-
-#endif // MPDNG_PLUGINS_COMMON_H
-
-
+#endif // FLUTIO_INPUT_PLUGIN_H

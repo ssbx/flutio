@@ -28,7 +28,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <mpd-ng/plugins/input.h>
+#include <flutio/plugins/input.h>
 #include <sndfile.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -49,7 +49,7 @@ static int  SFile_getRate(PluginData_T);
 static int  SFile_getFrames(PluginData_T);
 static int  SFile_getChannels(PluginData_T);
 
-void MpdNG_InputPluginInfo(InputPluginInfo_T *info)
+void Flutio_InputPluginInfo(InputPluginInfo_T *info)
 {
     info->name            = PLUGIN_NAME;
     info->revision        = PLUGIN_REVISION;

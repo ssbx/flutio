@@ -47,10 +47,10 @@ anonyme permetant l'échange de fichier anonymes (VPN?).
 ===============================================================================
 # INSTALLATION
 
-                 mpd-ng Installation
+                 flutio Installation
 
 
-mpd-ng is built and installed with a dead simple Makefile.
+flutio is built and installed with a dead simple Makefile.
 Open and edit it if none of the options described here
 fixes your problem.
 
@@ -66,10 +66,10 @@ These commands could be enought for a debian based system:
     $ make install
 
  At this point install target have created $HOME/{bin,lib,
-share} directories if they do not exists. The mpd-ng
+share} directories if they do not exists. The flutio
 binaries are located in $HOME/bin
 
-    $ mpd-ngu
+    $ flutiou
 
 
         Dependencies
@@ -90,12 +90,12 @@ I use these libraries on my computer for the development:
         Build/install targets
         =====================
 
-mpd-ng player daemon only:
+flutio player daemon only:
 
     $ make fpd
     $ make install-fpd
 
-mpd-ng graphical user interface:
+flutio graphical user interface:
 
     $ make gui
     $ make install-gui
@@ -140,9 +140,9 @@ And these additional options for the gui:
   deskdir = $(prefix)/share/applications
 
 
-Example to prepare mpd-ng for package managers:
+Example to prepare flutio for package managers:
 
-    $ make prefix="/usr" DESTDIR="$HOME/mytmpdir" install
+    $ make prefix="/usr" DESTDIR="$HOME/mytflutioir" install
 
 
 ===============================================================================

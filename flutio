@@ -31,12 +31,12 @@
 # Next line ignored by tcl \
 exec tclsh "$0" ${1+"$@"}
 
-namespace eval mpdng {
+namespace eval flutio {
     variable usage \
 "Usage: [info script] \[ -f system_config \] \[COMMAND\]
 
-This command is used by mpd-ng to start/connect a mpd-ng processusing the
-startup config file located in \$HOME/.mpd-ng/startup.cfg
+This command is used by flutio to start/connect a flutio processusing the
+startup config file located in \$HOME/.flutio/startup.cfg
 
 OPTIONS:
     -f       Path to the system.config file
@@ -45,9 +45,9 @@ When COMMAND is ommited, it is treated as it is start. It can be:
      start   Start the daemon and return
      kill    Kill the daemon
      status  Print the current player process status
-     connect Connect to the mpd-ng player and read/write commands/messages
+     connect Connect to the flutio player and read/write commands/messages
              from/to stdin/stdout. This is the command used by the user
-             interface. This command will start the mpd-ng process if it
+             interface. This command will start the flutio process if it
              is down.
      help    Print this messag
 "
@@ -57,44 +57,44 @@ When COMMAND is ommited, it is treated as it is start. It can be:
 # Catch missing libs
 set s [info script]
 while {[file type $s] == "link"} { set s [file link $s] }
-set ::mpdng::libdir [file dirname $s]
-lappend auto_path [file join $::mpdng::libdir pkgs]
+set ::flutio::libdir [file dirname $s]
+lappend auto_path [file join $::flutio::libdir pkgs]
 if [catch {
         package require Tcl         8.6
         package require unixsocket  1.0
         package require taglib      1.0
         package require tclreadline 2.3
-        load [file join $::mpdng::libdir libtclmpdng.so] } msg] {
-    puts stderr "mpd-ng won't start: $msg"
+        load [file join $::flutio::libdir libtclflutio.so] } msg] {
+    puts stderr "flutio won't start: $msg"
     exit 1
 }
 
 ###########################################################################
 # Check if command is valid
 if {$argc == 0} {
-    set ::mpdng::system_config \
-                               [file join $env(HOME) .mpd-ng system.config]
-    set ::mpdng::command start
+    set ::flutio::system_config \
+                               [file join $env(HOME) .flutio system.config]
+    set ::flutio::command start
 } elseif {$argc == 1} {
-    set ::mpdng::system_config \
-                               [file join $env(HOME) .mpd-ng system.config]
-    set ::mpdng::command [lindex $argv 0]
+    set ::flutio::system_config \
+                               [file join $env(HOME) .flutio system.config]
+    set ::flutio::command [lindex $argv 0]
 } elseif {$argc == 2 && [lindex $argv 0] == "-f"} {
-    set ::mpdng::system_config [lindex $argv 1]
-    set ::mpdng::command start
+    set ::flutio::system_config [lindex $argv 1]
+    set ::flutio::command start
 } elseif {$argc == 3 && [lindex $argv 0] == "-f"} {
-    set ::mpdng::system_config [lindex $argv 1]
-    set ::mpdng::command [lindex $argv 2]
+    set ::flutio::system_config [lindex $argv 1]
+    set ::flutio::command [lindex $argv 2]
 } else {
     puts stderr "Failed to execute $argv"
-    puts stderr $::mpdng::usage
+    puts stderr $::flutio::usage
     exit 1
 }
 
 if {[lsearch {start kill status connect help daemon} \
-                                            $::mpdng::command] == -1} {
+                                            $::flutio::command] == -1} {
     puts stderr "Failed to execute $argv"
-    puts stderr $::mpdng::usage
+    puts stderr $::flutio::usage
     exit 1
 }
 
@@ -103,70 +103,70 @@ if {[lsearch {start kill status connect help daemon} \
 # overwriten by the startup.config
 # TODO ici lire le ficher startup, mais seulement ce qui est du contexte
 # sysconfig, sinon les valeurs par defaut
-set ::mpdng::home_dir    [file join $env(HOME) .mpd-ng]
-set ::mpdng::startup_cfg [file join $::mpdng::home_dir startup.config]
-set ::mpdng::pid_file    [file join $::mpdng::home_dir running.pid]
-set ::mpdng::msg_log     [file join $::mpdng::home_dir messages.log]
-set ::mpdng::err_log     [file join $::mpdng::home_dir errors.log]
-set ::mpdng::socket_path [file join $::mpdng::home_dir mpd-ng.socket]
+set ::flutio::home_dir    [file join $env(HOME) .flutio]
+set ::flutio::startup_cfg [file join $::flutio::home_dir startup.config]
+set ::flutio::pid_file    [file join $::flutio::home_dir running.pid]
+set ::flutio::msg_log     [file join $::flutio::home_dir messages.log]
+set ::flutio::err_log     [file join $::flutio::home_dir errors.log]
+set ::flutio::socket_path [file join $::flutio::home_dir flutio.socket]
 
 ###########################################################################
 # Create home directory if absent
-if {! [file exist $::mpdng::home_dir]} {
-    file mkdir $::mpdng::home_dir
-    file attribute $::mpdng::home_dir -permissions 0700
+if {! [file exist $::flutio::home_dir]} {
+    file mkdir $::flutio::home_dir
+    file attribute $::flutio::home_dir -permissions 0700
 }
 
 ###########################################################################
 # Here define all commands functions but the stelth "daemon" one.
 #
-namespace eval ::mpdng {
+namespace eval ::flutio {
 
     #######################################################################
-    # mpd-ng start
+    # flutio start
     proc start {} {
         return 0
     }
 
     #######################################################################
-    # mpd-ng status
+    # flutio status
     proc status {} {
-        if [file exist $::mpdng::pid_file] {
-            set f [open $::mpdng::pid_file "r"]
+        if [file exist $::flutio::pid_file] {
+            set f [open $::flutio::pid_file "r"]
             set fpid [read $f]
             close $f
-            puts "mpd-ng $fpid running"
+            puts "flutio $fpid running"
         } else {
-            puts "mpd-ng down"
+            puts "flutio down"
         }
         return 0
     }
 
     ####################################################################
     ##
-    # mpd-ng help
+    # flutio help
     proc help {ret} {
         if { $ret == 0 } {
-            puts stdout $::mpdng::usage
+            puts stdout $::flutio::usage
         } else {
-            puts stderr $::mpdng::usage
+            puts stderr $::flutio::usage
         }
         return $ret
     }
 
     #######################################################################
-    # mpd-ng connect
+    # flutio connect
     proc connect {} {
-        if { ! [file exist $::mpdng::pid_file] } {
+        if { ! [file exist $::flutio::pid_file] } {
             set ret [exec [info script] start]
             if {$ret > 0} {
-                puts "mpd-ng connect: error starting mpd-ng"
+                puts "flutio connect: error starting flutio"
                 return $ret
             }
         }
 
-        if { ! [file exist $::mpdng::socket_path] } {
-            puts "mpd-ng connect: $::mpdng::socket_path does not exists"
+        if { ! [file exist $::flutio::socket_path] } {
+            puts "flutio connect: $::flutio::socket_path does not exists"
             return 1
         }
 
@@ -174,20 +174,20 @@ namespace eval ::mpdng {
     }
 
     #######################################################################
-    # mpd-ng kill
+    # flutio kill
     proc kill {} {
-        if [file exist $::mpdng::pid_file] {
-            set f [open $::mpdng::pid_file "r"]
+        if [file exist $::flutio::pid_file] {
+            set f [open $::flutio::pid_file "r"]
             set fpid [read $f]
             close $f
             set ret [exec kill $fpid]
             if {$ret == 0} {
-                puts "mpd-ng process $fpid killed"
+                puts "flutio process $fpid killed"
             }
-            file delete $::mpdng::pid_file
+            file delete $::flutio::pid_file
             return $ret
         } else {
-            puts "No mpd-ng process running"
+            puts "No flutio process running"
             return 0
         }
     }
@@ -197,54 +197,54 @@ namespace eval ::mpdng {
 # Handle script command argument
 switch [lindex $argv 0] {
     "daemon"  {}
-    "start"   {exit [::mpdng::start]}
-    "kill"    {exit [::mpdng::kill]}
-    "status"  {exit [::mpdng::status]}
-    "connect" {exit [::mpdng::connect]}
-    "help"    {exit [::mpdng::help 0]}
-    default   {exit [::mpdng::help 1]}
+    "start"   {exit [::flutio::start]}
+    "kill"    {exit [::flutio::kill]}
+    "status"  {exit [::flutio::status]}
+    "connect" {exit [::flutio::connect]}
+    "help"    {exit [::flutio::help 0]}
+    default   {exit [::flutio::help 1]}
 }
 
 ###########################################################################
-# !!!         ONLY THE "mpd-ng daemon" COMMAND GOES OVER THERE         !!!!
+# !!!         ONLY THE "flutio daemon" COMMAND GOES OVER THERE         !!!!
 ###########################################################################
 
-proc ::mpdng::main {} {
+proc ::flutio::main {} {
 
-    if {[file exists $::mpdng::startup_config] != 1} {
-        ::mpdng::command "switch-context system"
-        ::mpdng::command "write running.config startup.config"
+    if {[file exists $::flutio::startup_config] != 1} {
+        ::flutio::command "switch-context system"
+        ::flutio::command "write running.config startup.config"
     }
-    set fd [open "/home/seb/src/mpd-ng/startup.config" "r"]
+    set fd [open "/home/seb/src/flutio/startup.config" "r"]
     foreach line [split [read $fd] "\n"] {
-        ::mpdng::command $line
+        ::flutio::command $line
     }
     close $fd
 
 
     #######################################################################
     # Load all possible plugins
-    foreach plugdir $::mpdng::plugdirs {
+    foreach plugdir $::flutio::plugdirs {
         set pluglibs [glob -nocomplain -directory $plugdir "*.so"]
         foreach plugin $pluglibs {
             puts "will load $plugin"
-            ::mpdng::c::plugins::load $plugin
+            ::flutio::c::plugins::load $plugin
         }
     }
 
-    ::mpdng::c::outputs::open
+    ::flutio::c::outputs::open
 
 
 
     set test_set [glob -nocomplain -directory /home/seb/test/ "*.wav"]
-    set ::mpdng::playlist::tracks [lsort -dictionary $test_set]
+    set ::flutio::playlist::tracks [lsort -dictionary $test_set]
     puts stderr $test_set
 
-    ::mpdng::playlist::play 0
+    ::flutio::playlist::play 0
     vwait _cataclysm_
 }
 
-namespace eval ::mpdng::contexts {
+namespace eval ::flutio::contexts {
     variable root    {}
     variable current_context {}
     variable context_error 1
@@ -294,29 +294,29 @@ namespace eval ::mpdng::contexts {
     }
 }
 
-namespace eval ::mpdng::configure {
+namespace eval ::flutio::configure {
 
     proc eval {cmd} {
         puts "configure!!!! $cmd"
     }
 
-    ::mpdng::contexts::register [list configure] ::mpdng::configure
+    ::flutio::contexts::register [list configure] ::flutio::configure
 
 }
 
 
-proc ::mpdng::command {str} {
+proc ::flutio::command {str} {
     set str [string tolower [string trim $str]]
     if {[string match "#*" $str] || [string length $str] == 0} {
         return
     }
     set cmd [split $str]
-    ::mpdng::contexts::evaluate $cmd
+    ::flutio::contexts::evaluate $cmd
 
 }
 
 
-namespace eval ::mpdng::usocket {
+namespace eval ::flutio::usocket {
     variable connexions
 
     proc accept {con} {
@@ -325,7 +325,7 @@ namespace eval ::mpdng::usocket {
 
 }
 
-namespace eval ::mpdng::playlist {
+namespace eval ::flutio::playlist {
     variable tracks [list]
     variable current_track -1
     variable next_track    -1
@@ -351,10 +351,10 @@ namespace eval ::mpdng::playlist {
             set index 0
         }
 
-        if {[catch {::mpdng::c::player::play \
+        if {[catch {::flutio::c::player::play \
                             [lindex $tracks $index]} err] == 0 } {
             set current_track $index
-            #::mpdng::playlist::setnext
+            #::flutio::playlist::setnext
         } else {
             puts stderr "Can not play [lindex $tracks $index]"
         }
@@ -370,7 +370,7 @@ namespace eval ::mpdng::playlist {
             return
         }
 
-        if {[catch {::mpdng::c::player::setnext \
+        if {[catch {::flutio::c::player::setnext \
                         [lindex $tracks $maybe_next]} err] == 0} {
             set next_track $maybe_next
         } else {
@@ -380,7 +380,7 @@ namespace eval ::mpdng::playlist {
     }
 }
 
-namespace eval ::mpdng::collection {
+namespace eval ::flutio::collection {
 }
 
-::mpdng::main
+::flutio::main

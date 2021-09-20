@@ -27,49 +27,18 @@
  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-
-#ifndef MPDNG_INPUT_PLUGIN_H
-#define MPDNG_INPUT_PLUGIN_H
-#include <mpd-ng/plugins/common.h>
-#include <mpd-ng/interfaces/frame_generator.h>
-
-#ifndef MPDNG_MAIN_BUILD
-    PluginType_T MpdNG_PluginType() { return MPDNG_PLUGIN_TYPE_INPUT; }
-#endif
+#ifndef FLUTIO_FRAMEGEN_IF_H
+#define FLUTIO_FRAMEGEN_IF_H
 
 /*
- * To write a plugin for MpdNG:
- *  - include this file
- *  - write a "input_info" function in your plugin
- *  - put your plugin in either $(libdir)/mpd-ng/plugins or
- *  $HOME/.mpd-ng/plugins
- *
- *  See the documentation of "input_info" at the end of this
- *  file.
+ * Frame generator interface
  */
+typedef struct _FrameGen_I {
+    float* (*read)            (PluginData_T,int,int*);
+    int    (*getRate)         (PluginData_T);
+    int    (*getFrameCount)   (PluginData_T);
+    int    (*getChannelCount) (PluginData_T);
+    int    (*seek)            (PluginData_T,int,int);
+} FrameGen_I;
 
-/*
- * Input plugin interface
- */
-typedef struct {
-    char          *name;
-    int	           revision;
-    FrameGen_I     frameGen;
-    int          (*concerned) (char*);
-    char**       (*listOptions)();
-    char*        (*getOption) (char*);
-    int          (*setOption) (char*,char*);
-    PluginData_T (*open)      (char*);
-    void         (*close)     (PluginData_T);
-} InputPluginInfo_T;
-
-/*
- * This is the unique function that must be implemented on the
- * plugin side. Must return the type of plugin, and the relevant
- * union (input or output) filled with relevant data.
- * input_info_t is self explanatory, see default mpd-ng plugins
- * source for examples.
- */
-void MpdNG_InputPluginInfo(InputPluginInfo_T*);
-
-#endif // MPDNG_INPUT_PLUGIN_H
+#endif // FLUTIO_FRAMEGEN_IF_H

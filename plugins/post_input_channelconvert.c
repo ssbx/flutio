@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <unistd.h>
-#include <mpd-ng/plugins/post_input.h>
+#include <flutio/plugins/post_input.h>
 
 static char name[]   = "channel-convert";
 static int  revision = 1;
