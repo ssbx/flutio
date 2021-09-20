@@ -1,15 +1,18 @@
 .PHONY: all
 all:
-	make -C tclunixsocket
-	make -C tcltaglib
+	make -C unixsocket
+	make -C taglib
+	make -C flutiolib
 
 .PHONY: clean
 clean:
-	make -C tclunixsocket clean
-	make -C tcltaglib clean
+	make -C unixsocket clean
+	make -C taglib clean
+	make -C flutiolib clean
 
 .PHONY: install
 install:
-	make -C tclunixsocket install
-	make -C tcltaglib install
+	make -C unixsocket install
+	make -C taglib install
+	make -C flutiolib install
 

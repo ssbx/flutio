@@ -51,39 +51,48 @@ When COMMAND is ommited, it is treated as it is start. It can be:
              is down.
      help    Print this messag
 "
+
+    variable lib_dir
+    variable sysconfig_file
+    variable syscontext
 }
 
 ###########################################################################
 # Catch missing libs
 set s [info script]
 while {[file type $s] == "link"} { set s [file link $s] }
-set ::flutio::libdir [file dirname $s]
-lappend auto_path [file join $::flutio::libdir pkgs]
+set ::flutio::lib_dir [file dirname $s]
+lappend auto_path [file join $::flutio::lib_dir pkgs]
 if [catch {
         package require Tcl         8.6
+        package require flutiolib   1.0
         package require unixsocket  1.0
         package require taglib      1.0
         package require tclreadline 2.3
-        load [file join $::flutio::libdir libtclflutio.so] } msg] {
+        load   [file join $::flutio::lib_dir libtclflutio.so]
+        source [file join $::flutio::lib_dir lib/SystemContext.tcl]
+        source [file join $::flutio::lib_dir lib/PluginContext.tcl]
+        source [file join $::flutio::lib_dir lib/PlaylistContext.tcl]
+    } msg] {
     puts stderr "flutio won't start: $msg"
     exit 1
 }
 
 ###########################################################################
 # Check if command is valid
+set default_sysconfig [file join $env(HOME) .flutio system.config]
+set default_command start
 if {$argc == 0} {
-    set ::flutio::system_config \
-                               [file join $env(HOME) .flutio system.config]
-    set ::flutio::command start
+    set ::flutio::sysconfig_file $default_sysconfig
+    set ::flutio::command $default_command
 } elseif {$argc == 1} {
-    set ::flutio::system_config \
-                               [file join $env(HOME) .flutio system.config]
+    set ::flutio::sysconfig_file $default_sysconfig
     set ::flutio::command [lindex $argv 0]
 } elseif {$argc == 2 && [lindex $argv 0] == "-f"} {
-    set ::flutio::system_config [lindex $argv 1]
+    set ::flutio::sysconfig_file [lindex $argv 1]
     set ::flutio::command start
 } elseif {$argc == 3 && [lindex $argv 0] == "-f"} {
-    set ::flutio::system_config [lindex $argv 1]
+    set ::flutio::sysconfig_file [lindex $argv 1]
     set ::flutio::command [lindex $argv 2]
 } else {
     puts stderr "Failed to execute $argv"
@@ -91,32 +100,42 @@ if {$argc == 0} {
     exit 1
 }
 
-if {[lsearch {start kill status connect help daemon} \
-                                            $::flutio::command] == -1} {
+set valid_commands {start kill status connect help daemon}
+if {[lsearch $valid_commands $::flutio::command] == -1} {
     puts stderr "Failed to execute $argv"
     puts stderr $::flutio::usage
     exit 1
 }
 
 ###########################################################################
-# Ok then, script variables for the default per user process. May be
-# overwriten by the startup.config
-# TODO ici lire le ficher startup, mais seulement ce qui est du contexte
-# sysconfig, sinon les valeurs par defaut
-set ::flutio::home_dir    [file join $env(HOME) .flutio]
-set ::flutio::startup_cfg [file join $::flutio::home_dir startup.config]
-set ::flutio::pid_file    [file join $::flutio::home_dir running.pid]
-set ::flutio::msg_log     [file join $::flutio::home_dir messages.log]
-set ::flutio::err_log     [file join $::flutio::home_dir errors.log]
-set ::flutio::socket_path [file join $::flutio::home_dir flutio.socket]
+# Create SystemContext, load or create system.config if it does not exists
+#
+set ::flutio::syscontext [::flutio::SystemContext new]
 
-###########################################################################
-# Create home directory if absent
-if {! [file exist $::flutio::home_dir]} {
-    file mkdir $::flutio::home_dir
-    file attribute $::flutio::home_dir -permissions 0700
+if {[file exists $::flutio::sysconfig_file] != 1} {
+    if [catch {
+            file mkdir [file dirname $::flutio::sysconfig_file]
+            set sysfd [open $::flutio::sysconfig_file w]
+            puts -nonewline $sysfd [$::flutio::syscontext dump]
+            close $sysfd
+      } msg] {
+        puts stderr "Can not load $::flutio::sysconfig_file $msg"
+        exit 1
+    }
+} else {
+    set sysfd [open $::flutio::sysconfig_file r]
+    foreach line [split [read $sysfd] "\n"] {
+        $::flutio::syscontext interpret $line
+    }
+    close $sysfd
 }
 
+if {![$::flutio::syscontext isvalid?]} {
+    puts stderr "Error in $::flutio::sysconfig_file"
+    exit 1
+}
+
+exit 1
 ###########################################################################
 # Here define all commands functions but the stelth "daemon" one.
 #
